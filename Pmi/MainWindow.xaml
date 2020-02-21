@@ -7,6 +7,28 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="323*"/>
+            <ColumnDefinition Width="323*"/>
+            <ColumnDefinition Width="136*"/>
+        </Grid.ColumnDefinitions>
+        <DockPanel Grid.Column="0" Margin="0 30 0 0">
+            <TextBlock FontSize="18" TextAlignment="Center" DockPanel.Dock="Top">Преподаватель</TextBlock>
+            <ListView Margin="30,20,30,30">
+                <TextBlock>hey</TextBlock>
+                <TextBlock>hey</TextBlock>
+            </ListView>
+        </DockPanel>
+
+        <DockPanel Grid.Column="1" Margin="0 30 0 0">
+            <TextBlock FontSize="18" TextAlignment="Center" DockPanel.Dock="Top">Вид отчета</TextBlock>
+            <ListView Margin="30,20,30,30">
+                <TextBlock>hey</TextBlock>
+                <TextBlock>hey</TextBlock>
+            </ListView>
+        </DockPanel>
+        <DockPanel Grid.Column="2">
+            <Button DockPanel.Dock="Bottom" Height="50" Content="Сформировать"></Button>
+        </DockPanel>
     </Grid>
 </Window>
