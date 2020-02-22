@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pmi.PlanModel
+namespace Pmi.Model
 {
     class Semester
     {
