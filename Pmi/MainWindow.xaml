@@ -14,17 +14,13 @@
         </Grid.ColumnDefinitions>
         <DockPanel Grid.Column="0" Margin="0 30 0 0">
             <TextBlock FontSize="18" TextAlignment="Center" DockPanel.Dock="Top">Преподаватель</TextBlock>
-            <ListView Margin="30,20,30,30">
-                <TextBlock>hey</TextBlock>
-                <TextBlock>hey</TextBlock>
+            <ListView Margin="30,20,30,30" ItemsSource="{Binding Teachers}" SelectedItem="{Binding SelectedTeacher}">
             </ListView>
         </DockPanel>
 
         <DockPanel Grid.Column="1" Margin="0 30 0 0">
             <TextBlock FontSize="18" TextAlignment="Center" DockPanel.Dock="Top">Вид отчета</TextBlock>
-            <ListView Margin="30,20,30,30">
-                <TextBlock>hey</TextBlock>
-                <TextBlock>hey</TextBlock>
+            <ListView Margin="30,20,30,30" ItemsSource="{Binding ReportModes}" SelectedItem="{Binding SelectedMode}">
             </ListView>
         </DockPanel>
         <DockPanel Grid.Column="2">
