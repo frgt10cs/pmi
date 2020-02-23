@@ -9,8 +9,6 @@ namespace Pmi.Model
     class Employee
     {
         public string Name { get; set; }
-        public double X { get; set; }
-        public double D { get; set; }
         public Semester AutumnSemester { get; set; }
         public Semester SpringSemester { get; set; }
         public Employee(string name)
@@ -24,11 +22,11 @@ namespace Pmi.Model
         public double LaboratoryWorkForYear() =>
             AutumnSemester.TotalForLaboratoryWork() + SpringSemester.TotalForLaboratoryWork();
 
-        public double ConsultationsForYear() =>
-            AutumnSemester.TotalForConsultations() + SpringSemester.TotalForConsultations();
+        public double ConsultationsByTheoryForYear() =>
+            AutumnSemester.TotalForConsultationsByTheory() + SpringSemester.TotalForConsultationsByTheory();
 
-        public double WorkWithAspirantsForYear() =>
-            AutumnSemester.TotalForWorkWithAspirants() + SpringSemester.TotalForWorkWithAspirants();
+        public double ConsultationsByDiplomForYear() =>
+            AutumnSemester.TotalForConsultationsByDiplom() + SpringSemester.TotalForConsultationsByDiplom();
 
         public double CourseworkForYear() => AutumnSemester.TotalForCoursework() + SpringSemester.TotalForCoursework();
         public double DiplomsForYear() => AutumnSemester.TotalForDiploms() + SpringSemester.TotalForDiploms();
@@ -36,8 +34,7 @@ namespace Pmi.Model
         public double TestsForYear() => AutumnSemester.TotalForTests() + SpringSemester.TotalForTests();
         public double ExamForYear() => AutumnSemester.TotalForExam() + SpringSemester.TotalForExam();
         public double AspirantsForYear() => AutumnSemester.TotalForAspirants() + SpringSemester.TotalForAspirants();
-        public double MastersForYear() => AutumnSemester.TotalForMasters() + SpringSemester.TotalForMasters();
-        public double GakForYear() => AutumnSemester.TotalForGak() + SpringSemester.TotalForGak();
+        public double GakForYear() => AutumnSemester.TotalForGEK() + SpringSemester.TotalForGEK();
 
         public double Year()
         {
