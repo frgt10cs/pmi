@@ -16,16 +16,15 @@ namespace Pmi.Model
         public double TotalForLectures() => Disciplines.Sum(a => a.Lectures);
         public double TotalForPracticalWork() => Disciplines.Sum(a => a.PracticalWork);
         public double TotalForLaboratoryWork() => Disciplines.Sum(a => a.LaboratoryWork);
-        public double TotalForConsultations() => Disciplines.Sum(a => a.Consultations);
-        public double TotalForWorkWithAspirants() => Disciplines.Sum(a => a.WorkWithAspirants);
+        public double TotalForConsultationsByTheory() => Disciplines.Sum(a => a.ConsultationsByTheory);
+        public double TotalForConsultationsByDiplom() => Disciplines.Sum(a => a.ConsultationsByDiplom);
         public double TotalForCoursework() => Disciplines.Sum(a => a.Coursework);
         public double TotalForDiploms() => Disciplines.Sum(a => a.Lectures);
         public double TotalForPractice() => Disciplines.Sum(a => a.Practice);
         public double TotalForTests() => Disciplines.Sum(a => a.Tests);
         public double TotalForExam() => Disciplines.Sum(a => a.Exam);
         public double TotalForAspirants() => Disciplines.Sum(a => a.Aspirants);
-        public double TotalForMasters() => Disciplines.Sum(a => a.Masters);
-        public double TotalForGak() => Disciplines.Sum(a => a.Gak);
+        public double TotalForGEK() => Disciplines.Sum(a => a.GEK);
         public double TotalForSemester() => Disciplines.Sum(a => a.TotalForThisDiscipline());
     }
 }
