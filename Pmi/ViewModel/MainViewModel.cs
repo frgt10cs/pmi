@@ -6,13 +6,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using Pmi.Model;
+using Pmi.Service.Interface;
 
 namespace Pmi.ViewModel
 {
     class MainViewModel:BaseViewModel
     {
-        public ObservableCollection<string> Teachers { get; set; }
-        public ObservableCollection<string> ReportModes { get; set; }
+        public ObservableCollection<string> Employees { get; set; } = new ObservableCollection<string>();
+        public ObservableCollection<string> ReportModes { get; set; } = new ObservableCollection<string>();
         private string selectedTeacher;
         public string SelectedTeacher { get { return selectedTeacher; } set { selectedTeacher = value; OnPropertyChanged("SelectedTeacher"); } }
         private string selectedMode;
@@ -20,14 +21,20 @@ namespace Pmi.ViewModel
         private RelayCommand createReport;
         public RelayCommand CreateReport { get { return createReport; } }
 
-        public MainViewModel()
+        public MainViewModel(ICacheService<EmployeeCache> cacheServ)
         {
-            Teachers = new ObservableCollection<string>()
+            cacheServ.UploadCache();        
+            if(cacheServ.IsEmpty)
             {
-                "22balin",
-                "beardvedka",
-                "poroshenko"
-            };
+
+            }
+            else
+            {
+                foreach(var employee in cacheServ.GetAll())
+                {
+                    Employees.Add($"{employee.LastName} {employee.FirstName}. {employee.Patronymic}. \n{employee.Rank}");
+                }
+            }            
 
             ReportModes = new ObservableCollection<string>()
             {
@@ -41,6 +48,6 @@ namespace Pmi.ViewModel
                 MessageBox.Show("in the future");
             },
             _obj => selectedTeacher != null && selectedMode != null);
-        }       
+        }                   
     }
 }

@@ -8,6 +8,7 @@ namespace Pmi.Service.Interface
 {
     interface ICacheService<T>
     {
+        bool IsEmpty { get; }
         List<T> GetAll();
         void Add(T item);
         void SetAll(List<T> items);

@@ -14,17 +14,15 @@ namespace Pmi.Service.Implimentation
     {
         private string filePath;
         private List<T> elements;
+        public bool IsEmpty { get { return !elements.Any(); } }
 
         public JsonCacheService(string filePath)
         {
-            if(File.Exists(filePath))
+            if(!File.Exists(filePath))
             {
-                this.filePath = filePath;
+                File.WriteAllText(filePath, "[]");                
             }
-            else
-            {
-                
-            }
+            this.filePath = filePath;
         }
 
         public void UploadCache()

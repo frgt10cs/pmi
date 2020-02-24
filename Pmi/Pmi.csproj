@@ -72,6 +72,7 @@
     </ApplicationDefinition>
     <Compile Include="Model\Discipline.cs" />
     <Compile Include="Model\Employee.cs" />
+    <Compile Include="Model\EmployeeCache.cs" />
     <Compile Include="Model\RelayCommand.cs" />
     <Compile Include="Model\Semester.cs" />
     <Compile Include="Service\Implimentation\JsonCacheService.cs" />
@@ -110,7 +111,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="Cache\teachers.json" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -118,8 +118,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Cache\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

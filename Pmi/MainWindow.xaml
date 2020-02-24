@@ -36,7 +36,7 @@
                             <TextBlock Margin="10,0,10,0" Text="Вариант документа"/>
                         </Viewbox>
                     </Label>
-                    <ListBox Grid.Column="0" Grid.Row="1" Grid.RowSpan="2" Margin="10,10,10,40" ItemsSource="{Binding Teachers}" SelectedItem="{Binding SelectedTeacher}"/>
+                    <ListBox Grid.Column="0" Grid.Row="1" Grid.RowSpan="2" Margin="10,10,10,40" ItemsSource="{Binding Employees}" SelectedItem="{Binding SelectedTeacher}"/>
                     <Label Grid.Column="1" Grid.Row="0" Margin="10,10,10,10" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="SkyBlue" Foreground="White">
                         <Viewbox>
                             <TextBlock Margin="10,0,10,0" Text="Преподаватель"/>

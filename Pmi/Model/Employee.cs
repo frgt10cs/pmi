@@ -8,15 +8,19 @@ namespace Pmi.Model
 {
     class Employee
     {
-        public string Name { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Patronymic { get; set; }
+        public string Rank { get; set; }
         public Semester AutumnSemester { get; set; }
         public Semester SpringSemester { get; set; }
-        public Employee(string name)
-        {
-            Name = name;
+
+        public Employee()
+        {            
             AutumnSemester = new Semester();
             SpringSemester = new Semester();
         }
+
         public double LecturesForYear() => AutumnSemester.TotalForLectures() + SpringSemester.TotalForLectures();
         public double PracticalWorkForYear() => AutumnSemester.TotalForPracticalWork() + SpringSemester.TotalForPracticalWork();
         public double LaboratoryWorkForYear() =>
@@ -39,6 +43,17 @@ namespace Pmi.Model
         public double Year()
         {
             return AutumnSemester.TotalForSemester() + SpringSemester.TotalForSemester();
+        }
+
+        public static explicit operator EmployeeCache(Employee employee)
+        {
+            return new EmployeeCache()
+            {
+                LastName = employee.LastName,
+                FirstName = employee.FirstName[0],                
+                Patronymic = employee.Patronymic[0],
+                Rank = employee.Rank
+            };
         }
     }
 }
