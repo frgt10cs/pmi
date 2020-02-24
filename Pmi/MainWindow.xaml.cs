@@ -29,7 +29,7 @@ namespace Pmi
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainViewModel(new JsonCacheService<EmployeeCache>(ConfigurationManager.AppSettings.Get("teachersCache")));                        
+            DataContext = new MainViewModel(new JsonCacheService<EmployeeViewModel>(ConfigurationManager.AppSettings.Get("teachersCache")));                        
         }
     }
 }

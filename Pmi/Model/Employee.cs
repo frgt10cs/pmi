@@ -45,9 +45,9 @@ namespace Pmi.Model
             return AutumnSemester.TotalForSemester() + SpringSemester.TotalForSemester();
         }
 
-        public static explicit operator EmployeeCache(Employee employee)
+        public static explicit operator EmployeeViewModel(Employee employee)
         {
-            return new EmployeeCache()
+            return new EmployeeViewModel()
             {
                 LastName = employee.LastName,
                 FirstName = employee.FirstName[0],                

@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace Pmi.Model
 {
-    class EmployeeCache
+    class EmployeeViewModel
     {
+        public string FIO { get { return $"{LastName} {FirstName}. {Patronymic}."; } }
         public string LastName { get; set; }
         public char FirstName { get; set; }        
         public char Patronymic { get; set; }
