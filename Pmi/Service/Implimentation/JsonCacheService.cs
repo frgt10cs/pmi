@@ -49,8 +49,12 @@ namespace Pmi.Service.Implimentation
 
         public void SaveChanges()
         {
-            string json = JsonConvert.SerializeObject(elements);                       
-            File.WriteAllText(json, @filePath);
+            string json = JsonConvert.SerializeObject(elements);
+            using (FileStream fstream = new FileStream(filePath, FileMode.OpenOrCreate))
+            {
+                byte[] array = Encoding.Default.GetBytes(json);
+                fstream.Write(array, 0, array.Length);
+            }
         }
         
         private string GetHash(string value)
