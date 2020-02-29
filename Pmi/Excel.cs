@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Pmi.Model;
 
 namespace Pmi
 {
@@ -94,17 +95,61 @@ namespace Pmi
             sheets.Append(sheet);
             return worksheetPart;
         }
-
-        private static string GetFromCell(Worksheet worksheet, string nameCell)
+        
+        public static string GetCellValue(Worksheet worksheet, WorkbookPart workbookPart, string nameCell)
         {
+            string value = "0";
             Cell theCell = worksheet.Descendants<Cell>().Where(c => c.CellReference == nameCell).FirstOrDefault();
-            return theCell.InnerText;
-
+                if (theCell != null && theCell.InnerText.Length > 0)
+                {
+                    value = theCell.InnerText;
+                    if (theCell.DataType != null)
+                    {
+                        switch (theCell.DataType.Value)
+                        {
+                            case CellValues.SharedString:
+                                var stringTable = workbookPart.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+                                if (stringTable != null)
+                                {
+                                    value = stringTable.SharedStringTable.ElementAt(int.Parse(value)).InnerText;
+                                }
+                                break;
+                            case CellValues.Boolean:
+                                switch (value)
+                                {
+                                    case "0":
+                                        value = "FALSE";
+                                        break;
+                                    default:
+                                        value = "TRUE";
+                                        break;
+                                }
+                                break;
+                        }
+                    }
+                }
+            return value;
         }
 
-        private static void SomeMethod(string way)
+        private static double GetHour(string data, string name)
         {
-            string sheetName = "sheet1";
+            int start = data.IndexOf(name);
+            int lenght = 0;
+            while (data[start] != ';')
+            {
+                start++;
+            }
+            start++;
+            while(data[start + lenght] != ')')
+            {
+                lenght++;
+            }
+            return double.Parse(data.Substring(start, lenght));
+        } 
+
+        public static Employee GetEmployee(string way, string name)
+        {
+            string sheetName = "Лист1";
             using (SpreadsheetDocument doc = SpreadsheetDocument.Open(way, true))
             {
                 SharedStringTablePart shareStringPart;
@@ -120,9 +165,155 @@ namespace Pmi
                 Sheet theSheet = doc.WorkbookPart.Workbook.Descendants<Sheet>().Where(s => s.Name == sheetName).FirstOrDefault();
                 if (theSheet == null)
                 {
-                    return;
+                    return null;
                 }
                 WorksheetPart worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(theSheet.Id));
+                Employee employee = new Employee();
+                int row = 5;
+                while(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString()) != "Итого по ")
+                {
+                    //_________________________ВЕСЕННИЙ СЕМЕСТР_______________________
+                    string lekEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "O" + row.ToString());
+                    string prcEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "R" + row.ToString());
+                    string labEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "U" + row.ToString());
+                    if (lekEmployee.Contains(name) || prcEmployee.Contains(name) || labEmployee.Contains(name))
+                    {
+                        double countWeek = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "L" + row.ToString()));
+
+                        Discipline discipline = new Discipline(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()));
+                        discipline.Groups = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString()).Split('\n').ToList();
+                        discipline.CodeOP = "";
+                        if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "P" + row.ToString()) != "0" &&
+                            lekEmployee.Contains(name))
+                        {
+                            discipline.Lectures = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "M" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) *
+                                double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "H" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) * countWeek;
+                        }
+                        if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "P" + row.ToString()) != "0" &&
+                            prcEmployee.Contains(name))
+                        {
+                            if (prcEmployee.Contains(';'))
+                            {
+                                discipline.PracticalWork = GetHour(prcEmployee, name);
+                            }
+                            else
+                            {
+                                discipline.PracticalWork = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "P" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) *
+                                    double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "I" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) * countWeek;
+                            }
+                        }
+                        if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "S" + row.ToString()) != "0" &&
+                            labEmployee.Contains(name))
+                        {
+                            if (labEmployee.Contains(';'))
+                            {
+                                discipline.LaboratoryWork = GetHour(labEmployee, name);
+                            }
+                            else
+                            {
+                                discipline.LaboratoryWork = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "S" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) *
+                                    double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "J" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) * countWeek;
+                            }
+                        }
+                        //if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "W" + row.ToString()) != "0" &&
+                        //    GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "Y" + row.ToString()).Contains(name))
+                        //{
+                        //    discipline.ConsultationsByTheory = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "K" + row.ToString())) *
+                        //        double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "W" + row.ToString())) * 2;
+                        //}
+                        //if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "Z" + row.ToString()) != "0" &&
+                        //    GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AB" + row.ToString()).Contains(name))
+                        //{
+                        //    discipline.ConsultationsByDiplom = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "Z" + row.ToString())) *
+                        //        double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "K" + row.ToString())) * 3.25;
+                        //}
+                        if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AL" + row.ToString()) != "0" &&
+                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AN" + row.ToString()).Contains(name))
+                        {
+                            discipline.Tests = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AL" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) *
+                                double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "K" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) * 0.35;
+                        }
+                        if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AO" + row.ToString()) != "0" &&
+                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AQ" + row.ToString()).Contains(name))
+                        {
+                            discipline.Exam = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AO" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) *
+                                double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "K" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) * 0.35;
+                        }
+                        employee.AutumnSemester.Disciplines.Add(discipline);
+                    }
+
+                    //_________________________ОСЕННИЙ СЕМЕСТР_______________________
+                    lekEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AW" + row.ToString());
+                    prcEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AZ" + row.ToString());
+                    labEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BC" + row.ToString());
+                    if (lekEmployee.Contains(name) || prcEmployee.Contains(name) || labEmployee.Contains(name))
+                    {
+                        double countWeek = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AT" + row.ToString()));
+
+                        Discipline discipline = new Discipline(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()));
+                        discipline.Groups = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString()).Split('\n').ToList();
+                        discipline.CodeOP = "";
+                        if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AU" + row.ToString()) != "0" &&
+                            lekEmployee.Contains(name))
+                        {
+                            discipline.Lectures = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AU" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) *
+                            double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "H" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) * countWeek;
+                        }
+                        if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AX" + row.ToString()) != "0" &&
+                            prcEmployee.Contains(name))
+                        {
+                            if (prcEmployee.Contains(';'))
+                            {
+                                discipline.PracticalWork = GetHour(prcEmployee, name);
+                            }
+                            else
+                            {
+                                discipline.PracticalWork = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AX" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) *
+                                    double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "I" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) * countWeek;
+                            }
+                        }
+                        if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BA" + row.ToString()) != "0" &&
+                            labEmployee.Contains(name))
+                        {
+                            if (labEmployee.Contains(';'))
+                            {
+                                discipline.LaboratoryWork = GetHour(labEmployee, name);
+                            }
+                            else
+                            {
+                                discipline.LaboratoryWork = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BA" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) *
+                                    double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "J" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) * countWeek;
+                            }
+                        }
+                        //if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "W" + row.ToString()) != "0" &&
+                        //    GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "Y" + row.ToString()).Contains(name))
+                        //{
+                        //    discipline.ConsultationsByTheory = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "K" + row.ToString())) *
+                        //        double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "W" + row.ToString())) * 2;
+                        //}
+                        //if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "Z" + row.ToString()) != "0" &&
+                        //    GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AB" + row.ToString()).Contains(name))
+                        //{
+                        //    discipline.ConsultationsByDiplom = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "Z" + row.ToString())) *
+                        //        double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "K" + row.ToString())) * 3.25;
+                        //}
+                        if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BT" + row.ToString()) != "0" &&
+                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BV" + row.ToString()).Contains(name))
+                        {
+                            discipline.Tests = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BT" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) *
+                                double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "K" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) * 0.35;
+                        }
+                        if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BW" + row.ToString()) != "0" &&
+                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BY" + row.ToString()).Contains(name))
+                        {
+                            discipline.Exam = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BW" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) *
+                                double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "K" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture) * 0.35;
+                        }
+                        employee.SpringSemester.Disciplines.Add(discipline);
+                    }
+                    row++;
+                }
+                return employee;
             }
         }
     }

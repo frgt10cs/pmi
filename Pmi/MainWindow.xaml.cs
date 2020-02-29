@@ -29,6 +29,7 @@ namespace Pmi
         public MainWindow()
         {
             InitializeComponent();
+            Employee employee = Excel.GetEmployee("Data.xlsm", "Заботин");
             DataContext = new MainViewModel(new JsonCacheService<EmployeeViewModel>(ConfigurationManager.AppSettings.Get("teachersCache")));                        
         }
     }
