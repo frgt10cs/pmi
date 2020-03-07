@@ -39,6 +39,7 @@ namespace Pmi.Model
         public double ExamForYear() => AutumnSemester.TotalForExam() + SpringSemester.TotalForExam();
         public double AspirantsForYear() => AutumnSemester.TotalForAspirants() + SpringSemester.TotalForAspirants();
         public double GakForYear() => AutumnSemester.TotalForGEK() + SpringSemester.TotalForGEK();
+        public double AnotherWorkForYear() => AutumnSemester.TotalForAnotherWork() + SpringSemester.TotalForAnotherWork();
 
         public double Year()
         {
