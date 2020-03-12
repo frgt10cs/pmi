@@ -450,22 +450,24 @@ namespace Pmi
             }
             #endregion
             //___________________________________
+            
+            var stylesPart = spreadsheetDocument.WorkbookPart.AddNewPart<WorkbookStylesPart>();
+            stylesPart.Stylesheet = new Stylesheet();
 
-            workbookpart.AddNewPart<WorkbookStylesPart>();
-            spreadsheetDocument.WorkbookPart.WorkbookStylesPart.Stylesheet = new Stylesheet();
-            spreadsheetDocument.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts = new Fonts();
-            spreadsheetDocument.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats = new CellFormats();
-            WorkbookStylesPart stylesPart = spreadsheetDocument.WorkbookPart.WorkbookStylesPart;
-            stylesPart.Stylesheet.Fonts.Append(Style.fonts[0]);
-            stylesPart.Stylesheet.Save();
-            UInt32Value fontId = Convert.ToUInt32(stylesPart.Stylesheet.Fonts.ChildElements.Count - 1);
-            CellFormat cf = new CellFormat() { FontId = fontId, FillId = 0, BorderId = 0, ApplyFont = true, Alignment = new Alignment() { Horizontal = HorizontalAlignmentValues.Right, Vertical = VerticalAlignmentValues.Top, WrapText = true } };
-            stylesPart.Stylesheet.CellFormats.Append(cf);
+            stylesPart.Stylesheet.Fonts = new Fonts();
+            stylesPart.Stylesheet.Fonts.Count = 1;
+            stylesPart.Stylesheet.Fonts.AppendChild(Style.fonts[0]);
+
+            stylesPart.Stylesheet.CellFormats = new CellFormats();
+            CellFormat cf = new CellFormat() { FontId = 0, FillId = 0, BorderId = 0, ApplyFont = true, Alignment = new Alignment() { Horizontal = HorizontalAlignmentValues.Right, Vertical = VerticalAlignmentValues.Top, WrapText = true } };
+            stylesPart.Stylesheet.CellFormats.AppendChild(cf);
+            stylesPart.Stylesheet.CellFormats.Count = 1;
+            stylesPart.Stylesheet.Save();                       
 
             Cell semCell = InsertCellInWorksheet("A", 1, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("Здась могла быть ваша реклама", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
-            semCell.StyleIndex = Convert.ToUInt32(stylesPart.Stylesheet.CellFormats.ChildElements.Count - 1);                
+            semCell.StyleIndex = 0;               
 
             workbookpart.Workbook.Save();
             spreadsheetDocument.Close();
