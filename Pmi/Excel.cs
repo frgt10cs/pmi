@@ -12,6 +12,23 @@ namespace Pmi
 {
     class Excel
     {
+        static class Style
+        {
+            private static string TNR = "Times New Roman";
+            public static Font[] fonts = InitFonts();
+            public static Font[] InitFonts()
+            {
+                return  new Font[]
+                {
+                    new Font(                    
+                        new FontSize() { Val = 14 },
+                        new FontName() { Val = "Calibri" }                        
+                    )
+                };
+            }
+        }
+
+        #region shit
         class DataCell
         {
             public string Column;
@@ -404,7 +421,56 @@ namespace Pmi
                 return employee;
             }
         }
+        #endregion
+        public static void Test(string path)
+        {
+            #region shit
+            SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Create(path, SpreadsheetDocumentType.Workbook);
+            WorkbookPart workbookpart = spreadsheetDocument.AddWorkbookPart();
+            workbookpart.Workbook = new Workbook();
+            WorksheetPart worksheetPart = workbookpart.AddNewPart<WorksheetPart>();
+            worksheetPart.Worksheet = new Worksheet(new SheetData());
+            Sheets sheets = spreadsheetDocument.WorkbookPart.Workbook.AppendChild<Sheets>(new Sheets());
+            Sheet sheet = new Sheet()
+            {
+                Id = spreadsheetDocument.WorkbookPart.
+                GetIdOfPart(worksheetPart),
+                SheetId = 1,
+                Name = "Sheet1"
+            };
+            sheets.Append(sheet);
+            SharedStringTablePart shareStringPart;
+            if (workbookpart.GetPartsOfType<SharedStringTablePart>().Count() > 0)
+            {
+                shareStringPart = workbookpart.GetPartsOfType<SharedStringTablePart>().First();
+            }
+            else
+            {
+                shareStringPart = workbookpart.AddNewPart<SharedStringTablePart>();
+            }
+            #endregion
+            //___________________________________
 
+            workbookpart.AddNewPart<WorkbookStylesPart>();
+            spreadsheetDocument.WorkbookPart.WorkbookStylesPart.Stylesheet = new Stylesheet();
+            spreadsheetDocument.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts = new Fonts();
+            spreadsheetDocument.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats = new CellFormats();
+            WorkbookStylesPart stylesPart = spreadsheetDocument.WorkbookPart.WorkbookStylesPart;
+            stylesPart.Stylesheet.Fonts.Append(Style.fonts[0]);
+            stylesPart.Stylesheet.Save();
+            UInt32Value fontId = Convert.ToUInt32(stylesPart.Stylesheet.Fonts.ChildElements.Count - 1);
+            CellFormat cf = new CellFormat() { FontId = fontId, FillId = 0, BorderId = 0, ApplyFont = true, Alignment = new Alignment() { Horizontal = HorizontalAlignmentValues.Right, Vertical = VerticalAlignmentValues.Top, WrapText = true } };
+            stylesPart.Stylesheet.CellFormats.Append(cf);
+
+            Cell semCell = InsertCellInWorksheet("A", 1, worksheetPart);
+            semCell.CellValue = new CellValue(InsertSharedStringItem("Здась могла быть ваша реклама", shareStringPart).ToString());
+            semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+            semCell.StyleIndex = Convert.ToUInt32(stylesPart.Stylesheet.CellFormats.ChildElements.Count - 1);                
+
+            workbookpart.Workbook.Save();
+            spreadsheetDocument.Close();
+        }
+        #region shit
         public static void CreateRaport(string path, Employee employee)
         {
             SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Create(path, SpreadsheetDocumentType.Workbook);
@@ -800,5 +866,6 @@ namespace Pmi
             workbookpart.Workbook.Save();
             spreadsheetDocument.Close();
         }
+        #endregion
     }
 }
