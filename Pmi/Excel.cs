@@ -405,31 +405,8 @@ namespace Pmi
             }
         }
 
-        public static void CreateRaport(string path, Employee employee)
+        public static void CreateRaport(Employee employee, WorksheetPart worksheetPart, SharedStringTablePart shareStringPart)
         {
-            SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Create(path, SpreadsheetDocumentType.Workbook);
-            WorkbookPart workbookpart = spreadsheetDocument.AddWorkbookPart();
-            workbookpart.Workbook = new Workbook();
-            WorksheetPart worksheetPart = workbookpart.AddNewPart<WorksheetPart>();
-            worksheetPart.Worksheet = new Worksheet(new SheetData());
-            Sheets sheets = spreadsheetDocument.WorkbookPart.Workbook.AppendChild<Sheets>(new Sheets());
-            Sheet sheet = new Sheet()
-            {
-                Id = spreadsheetDocument.WorkbookPart.
-                GetIdOfPart(worksheetPart),
-                SheetId = 1,
-                Name = $"{employee.LastName} {employee.FirstName[0]}. {employee.Patronymic[0]}."
-            };
-            sheets.Append(sheet);
-            SharedStringTablePart shareStringPart;
-            if (workbookpart.GetPartsOfType<SharedStringTablePart>().Count() > 0)
-            {
-                shareStringPart = workbookpart.GetPartsOfType<SharedStringTablePart>().First();
-            }
-            else
-            {
-                shareStringPart = workbookpart.AddNewPart<SharedStringTablePart>();
-            }
             #region CreateCloumn
             if (worksheetPart.Worksheet.GetFirstChild<Columns>() == null)
             {
@@ -530,7 +507,7 @@ namespace Pmi
                 new DataCell(){Column = "O", Row = 7, Data = "подпись, ФИО"},
                 new DataCell(){Column = "C", Row = 7, Data = $"{employee.Rank}, {employee.FirstName} {employee.LastName} {employee.Patronymic}"},
                 new DataCell(){Column = "C", Row = 8, Data = "должность, ФИО, ученая степень, ученое звание, доля ставки, штатность"},
-                
+
                 new DataCell(){Column = "A", Row = 11, Data = "Код ОП,\nиндекс дисциплины,\nнаименование дисциплины"},
                 new DataCell(){Column = "C", Row = 11, Data = "Группа"},
                 new DataCell(){Column = "D", Row = 11, Data = "Лекц"},
@@ -797,6 +774,34 @@ namespace Pmi
             semCell = InsertCellInWorksheet("K", row, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("подпись преподавателя", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+        }
+
+        public static void CreateRaportSeparate(string path, Employee employee)
+        {
+            SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Create(path, SpreadsheetDocumentType.Workbook);
+            WorkbookPart workbookpart = spreadsheetDocument.AddWorkbookPart();
+            workbookpart.Workbook = new Workbook();
+            WorksheetPart worksheetPart = workbookpart.AddNewPart<WorksheetPart>();
+            worksheetPart.Worksheet = new Worksheet(new SheetData());
+            Sheets sheets = spreadsheetDocument.WorkbookPart.Workbook.AppendChild<Sheets>(new Sheets());
+            Sheet sheet = new Sheet()
+            {
+                Id = spreadsheetDocument.WorkbookPart.
+                GetIdOfPart(worksheetPart),
+                SheetId = 1,
+                Name = $"{employee.LastName} {employee.FirstName[0]}. {employee.Patronymic[0]}."
+            };
+            sheets.Append(sheet);
+            SharedStringTablePart shareStringPart;
+            if (workbookpart.GetPartsOfType<SharedStringTablePart>().Count() > 0)
+            {
+                shareStringPart = workbookpart.GetPartsOfType<SharedStringTablePart>().First();
+            }
+            else
+            {
+                shareStringPart = workbookpart.AddNewPart<SharedStringTablePart>();
+            }
+            CreateRaport(employee, worksheetPart, shareStringPart);
             workbookpart.Workbook.Save();
             spreadsheetDocument.Close();
         }
