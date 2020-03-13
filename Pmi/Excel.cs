@@ -184,6 +184,8 @@ namespace Pmi
     {
         private Stylesheet stylesheet;
         private List<Font> fonts;
+        private List<Border> borders;
+        private List<Fill> fills;
         private List<CellFormat> cellFormats;
 
         public ExcelStylesheetBuilder()
@@ -196,6 +198,8 @@ namespace Pmi
             stylesheet = new Stylesheet();
             fonts = new List<Font>();
             cellFormats = new List<CellFormat>();
+            borders = new List<Border>();
+            fills = new List<Fill>();
         }
 
         public void AddFont(Font font)
@@ -212,6 +216,8 @@ namespace Pmi
         {
             stylesheet.Fonts = new Fonts(fonts);
             stylesheet.CellFormats = new CellFormats(cellFormats);
+            stylesheet.Borders = new Borders(borders);
+            stylesheet.Fills = new Fills(fills);
             var stylesheetTemp = stylesheet;
             Reset();
             return stylesheetTemp;
