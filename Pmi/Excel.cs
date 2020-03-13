@@ -10,105 +10,251 @@ using Pmi.Model;
 
 namespace Pmi
 {
-    class Excel
+    enum CellStyle
     {
-        static Stylesheet GenerateStyleSheet()
+        UniveristyInfo = 0,
+        Title = 1
+    }
+
+    public interface IFontBuilder
+    {
+        void Reset();
+        void AddFontSize(int size);
+        void AddFontName(string fontName);
+        void AddBold();
+        void AddUnderline();
+        void AddColor(string hexValue);
+        void AddItalic();
+    }
+
+    public class ExcelFontBuilder:IFontBuilder
+    {
+        private Font font;
+        public const string defaultFontName = "Times New Roman";
+        //private const int defaultFontSize = 14;
+
+        public ExcelFontBuilder()
         {
-            return new Stylesheet(
-                new Fonts(
-                    new Font(                                                               // Стиль под номером 0 - Шрифт по умолчанию.
-                        new FontSize() { Val = 11 },
-                        new Color() { Rgb = new HexBinaryValue() { Value = "000000" } },
-                        new FontName() { Val = "Calibri" }),
-                    new Font(                                                               // Стиль под номером 1 - Жирный шрифт Times New Roman.
-                        new Bold(),
-                        new FontSize() { Val = 11 },
-                        new Color() { Rgb = new HexBinaryValue() { Value = "000000" } },
-                        new FontName() { Val = "Times New Roman" }),
-                    new Font(                                                               // Стиль под номером 2 - Обычный шрифт Times New Roman.
-                        new FontSize() { Val = 11 },
-                        new Color() { Rgb = new HexBinaryValue() { Value = "000000" } },
-                        new FontName() { Val = "Times New Roman" }),
-                    new Font(                                                               // Стиль под номером 3 - Шрифт Times New Roman размером 14.
-                        new FontSize() { Val = 14 },
-                        new Color() { Rgb = new HexBinaryValue() { Value = "000000" } },
-                        new FontName() { Val = "Times New Roman" })
-                ),
-                new Fills(
-                    new Fill(                                                           // Стиль под номером 0 - Заполнение ячейки по умолчанию.
-                        new PatternFill() { PatternType = PatternValues.None }),
-                    new Fill(                                                           // Стиль под номером 1 - Заполнение ячейки серым цветом
-                        new PatternFill(
-                            new ForegroundColor() { Rgb = new HexBinaryValue() { Value = "FFAAAAAA" } }
-                            )
-                        { PatternType = PatternValues.Solid }),
-                    new Fill(                                                           // Стиль под номером 2 - Заполнение ячейки красным.
-                        new PatternFill(
-                            new ForegroundColor() { Rgb = new HexBinaryValue() { Value = "FFFFAAAA" } }
-                        )
-                        { PatternType = PatternValues.Solid })
-                )
-                ,
-                new Borders(
-                    new Border(                                                         // Стиль под номером 0 - Грани.
-                        new LeftBorder(),
-                        new RightBorder(),
-                        new TopBorder(),
-                        new BottomBorder(),
-                        new DiagonalBorder()),
-                    new Border(                                                         // Стиль под номером 1 - Грани
-                        new LeftBorder(
-                            new Color() { Auto = true }
-                        )
-                        { Style = BorderStyleValues.Medium },
-                        new RightBorder(
-                            new Color() { Indexed = (UInt32Value)64U }
-                        )
-                        { Style = BorderStyleValues.Medium },
-                        new TopBorder(
-                            new Color() { Auto = true }
-                        )
-                        { Style = BorderStyleValues.Medium },
-                        new BottomBorder(
-                            new Color() { Indexed = (UInt32Value)64U }
-                        )
-                        { Style = BorderStyleValues.Medium },
-                        new DiagonalBorder()),
-                    new Border(                                                         // Стиль под номером 2 - Грани.
-                        new LeftBorder(
-                            new Color() { Auto = true }
-                        )
-                        { Style = BorderStyleValues.Thin },
-                        new RightBorder(
-                            new Color() { Indexed = (UInt32Value)64U }
-                        )
-                        { Style = BorderStyleValues.Thin },
-                        new TopBorder(
-                            new Color() { Auto = true }
-                        )
-                        { Style = BorderStyleValues.Thin },
-                        new BottomBorder(
-                            new Color() { Indexed = (UInt32Value)64U }
-                        )
-                        { Style = BorderStyleValues.Thin },
-                        new DiagonalBorder())
-                ),
-                new CellFormats(
-                    new CellFormat() { FontId = 0, FillId = 0, BorderId = 0 },                          // Стиль под номером 0 - The default cell style.  (по умолчанию)
-                    new CellFormat(new Alignment() { Horizontal = HorizontalAlignmentValues.Center, Vertical = VerticalAlignmentValues.Center, WrapText = true }) { FontId = 1, FillId = 2, BorderId = 1, ApplyFont = true },       // Стиль под номером 1 - Bold 
-                    new CellFormat(new Alignment() { Horizontal = HorizontalAlignmentValues.Center, Vertical = VerticalAlignmentValues.Center, WrapText = true }) { FontId = 2, FillId = 0, BorderId = 2, ApplyFont = true },       // Стиль под номером 2 - REgular
-                    new CellFormat() { FontId = 3, FillId = 0, BorderId = 2, ApplyFont = true, NumberFormatId = 4 },       // Стиль под номером 3 - Times Roman
-                    new CellFormat() { FontId = 0, FillId = 2, BorderId = 0, ApplyFill = true },       // Стиль под номером 4 - Yellow Fill
-                    new CellFormat(                                                                   // Стиль под номером 5 - Alignment
-                        new Alignment() { Horizontal = HorizontalAlignmentValues.Center, Vertical = VerticalAlignmentValues.Center }
-                    )
-                    { FontId = 0, FillId = 0, BorderId = 0, ApplyAlignment = true },
-                    new CellFormat() { FontId = 0, FillId = 0, BorderId = 1, ApplyBorder = true },      // Стиль под номером 6 - Border
-                    new CellFormat(new Alignment() { Horizontal = HorizontalAlignmentValues.Right, Vertical = VerticalAlignmentValues.Center, WrapText = true }) { FontId = 2, FillId = 0, BorderId = 2, ApplyFont = true, NumberFormatId = 4 }       // Стиль под номером 7 - Задает числовой формат полю.
-                )
-            ); // Выход
+            Reset();
         }
 
+        public void Reset()
+        {
+            font = new Font();
+            AddFontName(defaultFontName);
+        }
+
+        public void AddFontSize(int size)
+        {
+            font.FontSize = new FontSize() { Val = size };
+        }
+
+        public void AddFontName(string fontName)
+        {
+            font.FontName = new FontName() { Val = fontName };
+        }
+
+        public void AddColor(string hexValue)
+        {
+            font.Color = new Color() { Rgb = new HexBinaryValue() { Value = hexValue } };
+        }
+
+        public void AddUnderline()
+        {
+            font.Underline = new Underline();
+        }
+
+        public void AddBold()
+        {
+            font.Bold = new Bold();
+        }
+
+        public void AddItalic()
+        {
+            font.Italic = new Italic();
+        }
+
+        public Font GetFont()
+        {
+            Font font = this.font;
+            Reset();
+            return font;
+        }
+    }
+
+    public class FontDirector
+    {
+        private IFontBuilder fontBuilder;
+        public IFontBuilder FontBuilder { set { fontBuilder = value; } }
+
+        public void BuildUniversityInfoFont()
+        {
+            fontBuilder.AddFontSize(14);
+        }
+
+        public void BuildTitleFont()
+        {
+            fontBuilder.AddFontSize(16);
+            fontBuilder.AddBold();
+        }
+
+        public void BuildYearFont()
+        {
+            fontBuilder.AddFontSize(13);
+            fontBuilder.AddUnderline();
+        }
+
+        public void BuildEmployeeInfoMeta()
+        {
+            fontBuilder.AddFontSize(8);
+        }
+    }        
+
+    public class ExcelCellFormatBuilder
+    {
+        private CellFormat cellFormat;
+        private const HorizontalAlignmentValues defaultHorizontalValue =
+            HorizontalAlignmentValues.Left;
+        private const VerticalAlignmentValues defaultVerticalValue =
+            VerticalAlignmentValues.Center;
+
+        public ExcelCellFormatBuilder()
+        {
+            Reset();
+        }
+
+        public void Reset()
+        {
+            cellFormat = new CellFormat();
+            cellFormat.Alignment = new Alignment()
+            {
+                Horizontal = defaultHorizontalValue,
+                Vertical = defaultVerticalValue
+            };
+        }
+
+        public void AddHorizontalAlignment(HorizontalAlignmentValues aligment)
+        {
+            cellFormat.Alignment.Horizontal = aligment;
+        }
+
+        public void AddVerticalAlignment(VerticalAlignmentValues aligment)
+        {
+            cellFormat.Alignment.Vertical = aligment;
+        }
+
+        public void AddFontId(UInt32Value fontId)
+        {
+            cellFormat.FontId = fontId;
+        }
+
+        public CellFormat GetCellFormat()
+        {
+            var cell = cellFormat;
+            Reset();
+            return cell;
+        }
+    }
+
+    public class ExcelCellFormatDirector
+    {
+        private ExcelCellFormatBuilder builder;
+        public ExcelCellFormatBuilder CellFormatBuilder { set { builder = value; } }
+
+        public ExcelCellFormatDirector()
+        {
+            builder = new ExcelCellFormatBuilder();
+        }
+
+        public void BuildUniveristyInfoCellFormat(UInt32Value fontId)
+        {
+            builder.AddFontId(fontId);
+            builder.AddHorizontalAlignment(HorizontalAlignmentValues.Center);            
+        }
+
+        public void BuildTitleCellFormat(UInt32Value fontId)
+        {
+            builder.AddFontId(fontId);
+            builder.AddHorizontalAlignment(HorizontalAlignmentValues.Center);
+            builder.AddVerticalAlignment(VerticalAlignmentValues.Bottom);
+        }        
+    }
+
+    public class ExcelStylesheetBuilder
+    {
+        private Stylesheet stylesheet;
+        private List<Font> fonts;
+        private List<CellFormat> cellFormats;
+
+        public ExcelStylesheetBuilder()
+        {
+            Reset();
+        }
+
+        public void Reset()
+        {
+            stylesheet = new Stylesheet();
+            fonts = new List<Font>();
+            cellFormats = new List<CellFormat>();
+        }
+
+        public void AddFont(Font font)
+        {
+            fonts.Add(font);
+        }
+
+        public void AddCellFormat(CellFormat cellFormat)
+        {
+            cellFormats.Add(cellFormat);
+        }
+
+        public Stylesheet GetStylesheet()
+        {
+            stylesheet.Fonts = new Fonts(fonts);
+            stylesheet.CellFormats = new CellFormats(cellFormats);
+            var stylesheetTemp = stylesheet;
+            Reset();
+            return stylesheetTemp;
+        }
+    }
+
+    public class ExcelStylesheetDirector
+    {
+        private ExcelStylesheetBuilder stylesheetBuilder;
+        public ExcelStylesheetBuilder StylesheetBuilder { set { stylesheetBuilder = value; } }
+        private FontDirector fontDirector;
+        private ExcelFontBuilder fontBuilder;
+        private ExcelCellFormatBuilder cellFormatBuilder;
+        private ExcelCellFormatDirector cellFormatDirector;
+
+        public ExcelStylesheetDirector()
+        {
+            stylesheetBuilder = new ExcelStylesheetBuilder();
+            fontBuilder = new ExcelFontBuilder();
+            fontDirector = new FontDirector() { FontBuilder = fontBuilder };
+            cellFormatBuilder = new ExcelCellFormatBuilder();
+            cellFormatDirector = new ExcelCellFormatDirector() { CellFormatBuilder = cellFormatBuilder };
+        }
+
+        public void BuildReportStylesheet()
+        {
+            uint currentFontId = 0;
+            fontDirector.BuildUniversityInfoFont();
+            stylesheetBuilder.AddFont(fontBuilder.GetFont());
+            cellFormatDirector.BuildUniveristyInfoCellFormat(currentFontId);
+            stylesheetBuilder.AddCellFormat(cellFormatBuilder.GetCellFormat());
+            currentFontId++;
+
+            fontDirector.BuildTitleFont();
+            stylesheetBuilder.AddFont(fontBuilder.GetFont());
+            cellFormatDirector.BuildTitleCellFormat(currentFontId);
+            stylesheetBuilder.AddCellFormat(cellFormatBuilder.GetCellFormat());
+            currentFontId++;
+        }
+    }
+
+    class Excel
+    {                       
         #region shit
         class DataCell
         {
@@ -530,20 +676,21 @@ namespace Pmi
                 shareStringPart = workbookpart.AddNewPart<SharedStringTablePart>();
             }
             #endregion
-            //___________________________________
-            
-            var stylesPart = spreadsheetDocument.WorkbookPart.AddNewPart<WorkbookStylesPart>();
-            stylesPart.Stylesheet = new Stylesheet();
+            //___________________________________                       
 
+            ExcelStylesheetBuilder builder = new ExcelStylesheetBuilder();
+            ExcelStylesheetDirector director = new ExcelStylesheetDirector() { StylesheetBuilder = builder };
+            director.BuildReportStylesheet();
+            var styles = builder.GetStylesheet();
 
             var workStylePart = workbookpart.AddNewPart<WorkbookStylesPart>();
-            workStylePart.Stylesheet = GenerateStyleSheet();
+            workStylePart.Stylesheet = styles;
             workStylePart.Stylesheet.Save();
             
             Cell semCell = InsertCellInWorksheet("A", 1, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("Здась могла быть ваша реклама", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
-            semCell.StyleIndex = 2;
+            semCell.StyleIndex = 1;
 
             workbookpart.Workbook.Save();
             spreadsheetDocument.Close();
