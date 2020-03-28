@@ -29,7 +29,7 @@ namespace Pmi
         public MainWindow()
         {
             InitializeComponent();
-            Excel.Test("Test.xlsx");
+            Excel.CreateRaportInFile("Test.xlsx", null);
             DataContext = new MainViewModel(new JsonCacheService<EmployeeViewModel>(ConfigurationManager.AppSettings.Get("teachersCache")));                        
         }
     }

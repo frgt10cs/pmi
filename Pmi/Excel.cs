@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 using Pmi.Model;
 using Pmi.Builders;
 using Pmi.Directors;
+using Pmi.Service.Interface;
+using Pmi.Service.Implimentation;
+using System.Configuration;
 
 namespace Pmi
 {                          
@@ -408,52 +411,112 @@ namespace Pmi
             }
         }
         #endregion
-        public static void Test(string path)
+
+        private static Sheet GetSheet(WorkbookPart workbookPart, string nameSheet)
         {
-            #region shit
-            SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Create(path, SpreadsheetDocumentType.Workbook);
-            WorkbookPart workbookpart = spreadsheetDocument.AddWorkbookPart();
-            workbookpart.Workbook = new Workbook();
-            WorksheetPart worksheetPart = workbookpart.AddNewPart<WorksheetPart>();
+            Sheets sheets = workbookPart.Workbook.GetFirstChild<Sheets>();
+
+            foreach (var ItemSheets in sheets.Elements<Sheet>())
+            {
+                if (ItemSheets.Name == nameSheet)
+                {
+                    return ItemSheets;
+                }
+            }
+
+            WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
             worksheetPart.Worksheet = new Worksheet(new SheetData());
-            Sheets sheets = spreadsheetDocument.WorkbookPart.Workbook.AppendChild<Sheets>(new Sheets());
-            Sheet sheet = new Sheet()
+
+            string relationshipId = workbookPart.GetIdOfPart(worksheetPart);
+
+            uint sheetId = 1;
+            if (sheets.Elements<Sheet>().Count() > 0)
             {
-                Id = spreadsheetDocument.WorkbookPart.
-                GetIdOfPart(worksheetPart),
-                SheetId = 1,
-                Name = "Sheet1"
-            };
+                sheetId = sheets.Elements<Sheet>().Select(s => s.SheetId.Value).Max() + 1;
+            }
+            Sheet sheet = new Sheet() { Id = relationshipId, SheetId = sheetId, Name = nameSheet };
             sheets.Append(sheet);
-            SharedStringTablePart shareStringPart;
-            if (workbookpart.GetPartsOfType<SharedStringTablePart>().Count() > 0)
-            {
-                shareStringPart = workbookpart.GetPartsOfType<SharedStringTablePart>().First();
-            }
-            else
-            {
-                shareStringPart = workbookpart.AddNewPart<SharedStringTablePart>();
-            }
-            #endregion
-            //___________________________________                       
-
-            ExcelStylesheetBuilder builder = new ExcelStylesheetBuilder();
-            ExcelStylesheetDirector director = new ExcelStylesheetDirector() { StylesheetBuilder = builder };
-            director.BuildReportStylesheet();
-            var styles = builder.GetStylesheet();
-
-            var workStylePart = workbookpart.AddNewPart<WorkbookStylesPart>();
-            workStylePart.Stylesheet = styles;
-            workStylePart.Stylesheet.Save();
-            
-            Cell semCell = InsertCellInWorksheet("A", 1, worksheetPart);
-            semCell.CellValue = new CellValue(InsertSharedStringItem("Здась могла быть ваша реклама", shareStringPart).ToString());
-            semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
-            semCell.StyleIndex = (uint)ExcelCellStyle.Title;
-
-            workbookpart.Workbook.Save();
-            spreadsheetDocument.Close();
+            return sheet;
         }
+        public static void CreateRaportInFile(string path, Employee employee)
+        {
+            using (SpreadsheetDocument doc = SpreadsheetDocument.Open(path, true))
+            {
+                InitStyles(doc);
+                SharedStringTablePart shareStringPart;
+                if (doc.WorkbookPart.GetPartsOfType<SharedStringTablePart>().Count() > 0)
+                {
+                    shareStringPart = doc.WorkbookPart.GetPartsOfType<SharedStringTablePart>().First();
+                }
+                else
+                {
+                    shareStringPart = doc.WorkbookPart.AddNewPart<SharedStringTablePart>();
+                }
+                var sheet = GetSheet(doc.WorkbookPart, employee.LastName + " " + employee.FirstName[0] + "." + employee.Patronymic[0] + ".(A4)");
+                var worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(sheet.Id));
+                //CreateRaport(employee, worksheetPart, shareStringPart);
+                //sheet.Remove();
+                //doc.WorkbookPart.DeletePart(worksheetPart);
+                doc.WorkbookPart.Workbook.Save();
+            }
+        }
+
+        /// <summary>
+        /// Кэширует информацию о стилях документа
+        /// </summary>
+        /// <param name="stylesheetInfo"></param>
+        private static void CacheStylesheetInfo(StylesheetInfo stylesheetInfo)
+        {            
+            ICacheService<StylesheetInfo> cache = new JsonCacheService<StylesheetInfo>(ConfigurationManager.AppSettings.Get("stylesheetInfoCache"));
+            cache.Add(stylesheetInfo);
+            cache.SaveChanges();            
+        }
+
+        /// <summary>
+        /// Добавляет стили к документу
+        /// </summary>
+        /// <param name="document"></param>
+        /// <param name="stylesheet"></param>
+        private static void AppendStylesToDocument(SpreadsheetDocument document, Stylesheet stylesheet)
+        {
+            var documentStylesheet = document.WorkbookPart.WorkbookStylesPart.Stylesheet;
+            foreach (var font in stylesheet.Fonts.ChildElements)
+                documentStylesheet.Fonts.AppendChild(font.CloneNode(true));
+            foreach (var fill in stylesheet.Fills.ChildElements)
+                documentStylesheet.Fills.AppendChild(fill.CloneNode(true));
+            foreach (var border in stylesheet.Borders.ChildElements)
+                documentStylesheet.Borders.AppendChild(border.CloneNode(true));            
+            foreach (var cellFormat in stylesheet.Fonts.ChildElements)
+                documentStylesheet.Fonts.AppendChild(cellFormat.CloneNode(true));
+            document.Save();
+        }
+
+        /// <summary>
+        /// Инициализирует необходимые стили и заносит информацию о них в кэш
+        /// </summary>
+        /// <param name="document"></param>
+        public static void InitStyles(SpreadsheetDocument document)
+        {
+            var workbookpart = document.WorkbookPart;
+            var workStylePart = workbookpart.WorkbookStylesPart;
+            var styleSheet = workStylePart.Stylesheet;
+
+            ExcelStylesheetBuilder builder = new ExcelStylesheetBuilder((uint)styleSheet.Fonts.ChildElements.Count,
+                (uint)styleSheet.CellFormats.ChildElements.Count);
+            ExcelStylesheetDirector director = new ExcelStylesheetDirector() { StylesheetBuilder = builder };
+
+            var reportStylesheetInfo = director.BuildReportStylesheet();
+            var reportStylesheet = builder.GetStylesheet();
+
+            AppendStylesToDocument(document, reportStylesheet);            
+            CacheStylesheetInfo(reportStylesheetInfo);
+        }
+
+        public static void CheckStyles()
+        {
+
+        }
+
         #region shit
         public static void CreateRaport(string path, Employee employee)
         {

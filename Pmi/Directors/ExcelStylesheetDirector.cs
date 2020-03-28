@@ -1,17 +1,19 @@
 ﻿using Pmi.Builders;
+using Pmi.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pmi.Directors
+enum ExcelCellFormat
 {
-    enum ExcelCellStyle
-    {
-        UniveristyInfo = 1,
-        Title = 2
-    }
+    UniveristyInfo = 0,
+    Title = 1
+}
+
+namespace Pmi.Directors
+{    
     public class ExcelStylesheetDirector
     {
         private ExcelStylesheetBuilder stylesheetBuilder;
@@ -23,22 +25,25 @@ namespace Pmi.Directors
 
         public ExcelStylesheetDirector()
         {
-            stylesheetBuilder = new ExcelStylesheetBuilder();
+            //stylesheetBuilder = new ExcelStylesheetBuilder();
             fontBuilder = new ExcelFontBuilder();
             fontDirector = new FontDirector() { FontBuilder = fontBuilder };
             cellFormatBuilder = new ExcelCellFormatBuilder();
             cellFormatDirector = new ExcelCellFormatDirector() { CellFormatBuilder = cellFormatBuilder };
         }
 
-        public void BuildReportStylesheet()
+        public StylesheetInfo BuildReportStylesheet()
         {
+            var info = new StylesheetInfo();
             fontDirector.BuildUniversityInfoFont();
             cellFormatDirector.BuildUniveristyInfoCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()));
-            stylesheetBuilder.AddCellFormat(cellFormatBuilder.GetCellFormat());
+            info.AddCellFormatIndex((int)ExcelCellFormat.UniveristyInfo, stylesheetBuilder.AddCellFormat(cellFormatBuilder.GetCellFormat()));
 
             fontDirector.BuildTitleFont();
             cellFormatDirector.BuildTitleCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()));
-            stylesheetBuilder.AddCellFormat(cellFormatBuilder.GetCellFormat());
+            info.AddCellFormatIndex((int)ExcelCellFormat.Title, stylesheetBuilder.AddCellFormat(cellFormatBuilder.GetCellFormat()));
+
+            return info;
         }
     }
 

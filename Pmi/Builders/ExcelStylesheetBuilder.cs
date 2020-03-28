@@ -14,37 +14,70 @@ namespace Pmi.Builders
         private List<Border> borders;
         private List<Fill> fills;
         private List<CellFormat> cellFormats;
+        private uint fontStartId;
+        private uint cellFormatStartId;
 
-        public ExcelStylesheetBuilder()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fontStartId">Первый свободный идентификатор для шрифта</param>
+        /// <param name="cellFormatStartId">Первый свободный идентификатор для формата ячейки</param>
+        public ExcelStylesheetBuilder(uint fontStartId, uint cellFormatStartId)
         {
-            Reset();
+            this.fontStartId = fontStartId;
+            this.cellFormatStartId = cellFormatStartId;
+            Reset();            
         }
 
         public void Reset()
         {
-            stylesheet = new Stylesheet();
-            // Создаётся неправильный документ, если в стилях нет хотя бы одного элемента
-            // Это эксель так работает
-            fonts = new List<Font>() { new Font() };
-            cellFormats = new List<CellFormat>() { new CellFormat() };
-            borders = new List<Border>() { new Border() };
-            fills = new List<Fill>() { new Fill() };
+            stylesheet = new Stylesheet();            
+            fonts = new List<Font>();
+            cellFormats = new List<CellFormat>();
+            borders = new List<Border>();
+            fills = new List<Fill>();
         }
-
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="font"></param>
+        /// <returns>Идентификатор добавленного шрифта</returns>
         public uint AddFont(Font font)
         {
-            fonts.Add(font);
-            // Возвращает id добавленного шрифта
-            return Convert.ToUInt32(fonts.Count - 1);
+            fonts.Add(font);            
+            return fontStartId++;
         }
 
-        public void AddCellFormat(CellFormat cellFormat)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cellFormat"></param>
+        /// <returns>Идентификатор добавленного формата ячейки</returns>
+        public uint AddCellFormat(CellFormat cellFormat)
         {
             cellFormats.Add(cellFormat);
+            return cellFormatStartId++;
+        }
+
+        /// <summary>
+        /// Добавляет стандартное значение, если один из списков пуст. В противном случае Excel выдаст ошибку.
+        /// </summary>
+        private void CheckForEmpty()
+        {
+            if (fonts.Count == 0)
+                fonts.Add(new Font());
+            if (cellFormats.Count == 0)
+                cellFormats.Add(new CellFormat());
+            if (borders.Count == 0)
+                borders.Add(new Border());
+            if (fills.Count == 0)
+                fills.Add(new Fill());
         }
 
         public Stylesheet GetStylesheet()
         {
+            CheckForEmpty();
             stylesheet.Fonts = new Fonts(fonts);
             stylesheet.CellFormats = new CellFormats(cellFormats);
             stylesheet.Borders = new Borders(borders);

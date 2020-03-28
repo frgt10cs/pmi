@@ -23,6 +23,7 @@ namespace Pmi.Service.Implimentation
                 File.WriteAllText(filePath, "[]");                
             }
             this.filePath = filePath;
+            elements = new List<T>();
         }
 
         public void UploadCache()

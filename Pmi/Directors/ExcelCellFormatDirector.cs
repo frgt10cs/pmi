@@ -30,5 +30,26 @@ namespace Pmi.Directors
             builder.AddHorizontalAlignment(HorizontalAlignmentValues.Center);
             builder.AddVerticalAlignment(VerticalAlignmentValues.Bottom);
         }
+
+        public void BuildEmployeeInfoMetaCellFormat(uint fontId = 0)
+        {
+            builder.AddFontId(fontId);
+            builder.AddHorizontalAlignment(HorizontalAlignmentValues.Center);
+            builder.AddVerticalAlignment(VerticalAlignmentValues.Top);
+        }
+
+        public void BuildYearCellFormat(uint fontId = 0)
+        {
+            builder.AddFontId(fontId);
+            builder.AddHorizontalAlignment(HorizontalAlignmentValues.Center);
+            builder.AddVerticalAlignment(VerticalAlignmentValues.Bottom);
+        }
+
+        public void BuildEmployeeCellFormat(uint fontId = 0)
+        {
+            builder.AddFontId(fontId);
+            builder.AddHorizontalAlignment(HorizontalAlignmentValues.Center);
+            builder.AddVerticalAlignment(VerticalAlignmentValues.Bottom);
+        }
     }
 }

@@ -33,5 +33,11 @@ namespace Pmi.Directors
         {
             fontBuilder.AddFontSize(8);
         }
+
+        public void BuildEmployeeInfo()
+        {
+            fontBuilder.AddFontSize(14);
+            fontBuilder.AddUnderline();            
+        }
     }
 }
