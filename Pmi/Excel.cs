@@ -86,12 +86,21 @@ namespace Pmi
             return i;
         }
 
-        private static WorksheetPart InsertSheet(WorkbookPart workbookPart, string nameSheet)
+        private static Sheet GetSheet(WorkbookPart workbookPart, string nameSheet)
         {
+            Sheets sheets = workbookPart.Workbook.GetFirstChild<Sheets>();
+
+            foreach (var ItemSheets in sheets.Elements<Sheet>())
+            {
+                if (ItemSheets.Name == nameSheet)
+                {
+                    return ItemSheets;
+                }
+            }
+
             WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
             worksheetPart.Worksheet = new Worksheet(new SheetData());
-
-            Sheets sheets = workbookPart.Workbook.GetFirstChild<Sheets>();
+            
             string relationshipId = workbookPart.GetIdOfPart(worksheetPart);
 
             uint sheetId = 1;
@@ -101,7 +110,7 @@ namespace Pmi
             }
             Sheet sheet = new Sheet() { Id = relationshipId, SheetId = sheetId, Name = nameSheet };
             sheets.Append(sheet);
-            return worksheetPart;
+            return sheet;
         }
 
         public static string GetCellValue(Worksheet worksheet, WorkbookPart workbookPart, string nameCell)
@@ -377,7 +386,7 @@ namespace Pmi
                                     }
                                     CanAdd = false;
                                 }
-                                prac.PracticalWork += double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, (j==1?"K":"L") + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                                prac.PracticalWork += double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, (j == 1 ? "K" : "L") + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
                                 string code = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "D" + row.ToString());
                                 bool found = false;
                                 for (int i = 0; i < prac.Groups.Count; i++)
@@ -407,6 +416,7 @@ namespace Pmi
 
         public static void CreateRaport(Employee employee, WorksheetPart worksheetPart, SharedStringTablePart shareStringPart)
         {
+            System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
             #region CreateCloumn
             if (worksheetPart.Worksheet.GetFirstChild<Columns>() == null)
             {
@@ -564,46 +574,46 @@ namespace Pmi
                 cell.CellValue = new CellValue(InsertSharedStringItem(String.Join(", ", discipline.Groups), shareStringPart).ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
                 cell = InsertCellInWorksheet("D", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.Lectures.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.Lectures.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("E", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.PracticalWork.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.PracticalWork.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("F", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.LaboratoryWork.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.LaboratoryWork.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("G", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.ConsultationsByTheory.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.ConsultationsByTheory.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("H", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.ConsultationsByDiplom.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.ConsultationsByDiplom.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("I", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.Aspirants.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.Aspirants.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("J", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.Coursework.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.Coursework.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("K", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.Diploms.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.Diploms.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("L", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.Practice.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.Practice.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("M", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.GEK.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.GEK.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("N", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.Tests.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.Tests.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("O", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.Exam.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.Exam.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("P", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.AnotherWork.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.AnotherWork.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("Q", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.TotalForThisDiscipline().ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.TotalForThisDiscipline().ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 row++;
             }
@@ -615,20 +625,20 @@ namespace Pmi
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
             DataCell[] totalS =
             {
-                new DataCell(){Column = "D", Row = row, Data = employee.SpringSemester.TotalForLectures().ToString().Replace(',', '.')},
-                new DataCell(){Column = "E", Row = row, Data = employee.SpringSemester.TotalForPracticalWork().ToString().Replace(',', '.')},
-                new DataCell(){Column = "F", Row = row, Data = employee.SpringSemester.TotalForLaboratoryWork().ToString().Replace(',', '.')},
-                new DataCell(){Column = "G", Row = row, Data = employee.SpringSemester.TotalForConsultationsByTheory().ToString().Replace(',', '.')},
-                new DataCell(){Column = "H", Row = row, Data = employee.SpringSemester.TotalForConsultationsByDiplom().ToString().Replace(',', '.')},
-                new DataCell(){Column = "I", Row = row, Data = employee.SpringSemester.TotalForAspirants().ToString().Replace(',', '.')},
-                new DataCell(){Column = "J", Row = row, Data = employee.SpringSemester.TotalForCoursework().ToString().Replace(',', '.')},
-                new DataCell(){Column = "K", Row = row, Data = employee.SpringSemester.TotalForDiploms().ToString().Replace(',', '.')},
-                new DataCell(){Column = "L", Row = row, Data = employee.SpringSemester.TotalForPractice().ToString().Replace(',', '.')},
-                new DataCell(){Column = "M", Row = row, Data = employee.SpringSemester.TotalForGEK().ToString().Replace(',', '.')},
-                new DataCell(){Column = "N", Row = row, Data = employee.SpringSemester.TotalForTests().ToString().Replace(',', '.')},
-                new DataCell(){Column = "O", Row = row, Data = employee.SpringSemester.TotalForExam().ToString().Replace(',', '.')},
-                new DataCell(){Column = "P", Row = row, Data = employee.SpringSemester.TotalForAnotherWork().ToString().Replace(',', '.')},
-                new DataCell(){Column = "Q", Row = row, Data = employee.SpringSemester.TotalForSemester().ToString().Replace(',', '.')}
+                new DataCell(){Column = "D", Row = row, Data = employee.SpringSemester.TotalForLectures().ToString()},
+                new DataCell(){Column = "E", Row = row, Data = employee.SpringSemester.TotalForPracticalWork().ToString()},
+                new DataCell(){Column = "F", Row = row, Data = employee.SpringSemester.TotalForLaboratoryWork().ToString()},
+                new DataCell(){Column = "G", Row = row, Data = employee.SpringSemester.TotalForConsultationsByTheory().ToString()},
+                new DataCell(){Column = "H", Row = row, Data = employee.SpringSemester.TotalForConsultationsByDiplom().ToString()},
+                new DataCell(){Column = "I", Row = row, Data = employee.SpringSemester.TotalForAspirants().ToString()},
+                new DataCell(){Column = "J", Row = row, Data = employee.SpringSemester.TotalForCoursework().ToString()},
+                new DataCell(){Column = "K", Row = row, Data = employee.SpringSemester.TotalForDiploms().ToString()},
+                new DataCell(){Column = "L", Row = row, Data = employee.SpringSemester.TotalForPractice().ToString()},
+                new DataCell(){Column = "M", Row = row, Data = employee.SpringSemester.TotalForGEK().ToString()},
+                new DataCell(){Column = "N", Row = row, Data = employee.SpringSemester.TotalForTests().ToString()},
+                new DataCell(){Column = "O", Row = row, Data = employee.SpringSemester.TotalForExam().ToString()},
+                new DataCell(){Column = "P", Row = row, Data = employee.SpringSemester.TotalForAnotherWork().ToString()},
+                new DataCell(){Column = "Q", Row = row, Data = employee.SpringSemester.TotalForSemester().ToString()}
             };
             foreach (var data in totalS)
             {
@@ -658,46 +668,46 @@ namespace Pmi
                 cell.CellValue = new CellValue(InsertSharedStringItem(String.Join(", ", discipline.Groups), shareStringPart).ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
                 cell = InsertCellInWorksheet("D", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.Lectures.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.Lectures.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("E", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.PracticalWork.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.PracticalWork.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("F", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.LaboratoryWork.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.LaboratoryWork.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("G", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.ConsultationsByTheory.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.ConsultationsByTheory.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("H", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.ConsultationsByDiplom.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.ConsultationsByDiplom.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("I", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.Aspirants.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.Aspirants.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("J", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.Coursework.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.Coursework.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("K", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.Diploms.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.Diploms.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("L", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.Practice.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.Practice.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("M", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.GEK.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.GEK.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("N", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.Tests.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.Tests.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("O", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.Exam.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.Exam.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("P", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.AnotherWork.ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.AnotherWork.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 cell = InsertCellInWorksheet("Q", row, worksheetPart);
-                cell.CellValue = new CellValue(discipline.TotalForThisDiscipline().ToString().Replace(',', '.'));
+                cell.CellValue = new CellValue(discipline.TotalForThisDiscipline().ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                 row++;
             }
@@ -708,20 +718,20 @@ namespace Pmi
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
             DataCell[] totalA =
             {
-                new DataCell(){Column = "D", Row = row, Data = employee.AutumnSemester.TotalForLectures().ToString().Replace(',', '.')},
-                new DataCell(){Column = "E", Row = row, Data = employee.AutumnSemester.TotalForPracticalWork().ToString().Replace(',', '.')},
-                new DataCell(){Column = "F", Row = row, Data = employee.AutumnSemester.TotalForLaboratoryWork().ToString().Replace(',', '.')},
-                new DataCell(){Column = "G", Row = row, Data = employee.AutumnSemester.TotalForConsultationsByTheory().ToString().Replace(',', '.')},
-                new DataCell(){Column = "H", Row = row, Data = employee.AutumnSemester.TotalForConsultationsByDiplom().ToString().Replace(',', '.')},
-                new DataCell(){Column = "I", Row = row, Data = employee.AutumnSemester.TotalForAspirants().ToString().Replace(',', '.')},
-                new DataCell(){Column = "J", Row = row, Data = employee.AutumnSemester.TotalForCoursework().ToString().Replace(',', '.')},
-                new DataCell(){Column = "K", Row = row, Data = employee.AutumnSemester.TotalForDiploms().ToString().Replace(',', '.')},
-                new DataCell(){Column = "L", Row = row, Data = employee.AutumnSemester.TotalForPractice().ToString().Replace(',', '.')},
-                new DataCell(){Column = "M", Row = row, Data = employee.AutumnSemester.TotalForGEK().ToString().Replace(',', '.')},
-                new DataCell(){Column = "N", Row = row, Data = employee.AutumnSemester.TotalForTests().ToString().Replace(',', '.')},
-                new DataCell(){Column = "O", Row = row, Data = employee.AutumnSemester.TotalForExam().ToString().Replace(',', '.')},
-                new DataCell(){Column = "P", Row = row, Data = employee.AutumnSemester.TotalForAnotherWork().ToString().Replace(',', '.')},
-                new DataCell(){Column = "Q", Row = row, Data = employee.AutumnSemester.TotalForSemester().ToString().Replace(',', '.')}
+                new DataCell(){Column = "D", Row = row, Data = employee.AutumnSemester.TotalForLectures().ToString()},
+                new DataCell(){Column = "E", Row = row, Data = employee.AutumnSemester.TotalForPracticalWork().ToString()},
+                new DataCell(){Column = "F", Row = row, Data = employee.AutumnSemester.TotalForLaboratoryWork().ToString()},
+                new DataCell(){Column = "G", Row = row, Data = employee.AutumnSemester.TotalForConsultationsByTheory().ToString()},
+                new DataCell(){Column = "H", Row = row, Data = employee.AutumnSemester.TotalForConsultationsByDiplom().ToString()},
+                new DataCell(){Column = "I", Row = row, Data = employee.AutumnSemester.TotalForAspirants().ToString()},
+                new DataCell(){Column = "J", Row = row, Data = employee.AutumnSemester.TotalForCoursework().ToString()},
+                new DataCell(){Column = "K", Row = row, Data = employee.AutumnSemester.TotalForDiploms().ToString()},
+                new DataCell(){Column = "L", Row = row, Data = employee.AutumnSemester.TotalForPractice().ToString()},
+                new DataCell(){Column = "M", Row = row, Data = employee.AutumnSemester.TotalForGEK().ToString()},
+                new DataCell(){Column = "N", Row = row, Data = employee.AutumnSemester.TotalForTests().ToString()},
+                new DataCell(){Column = "O", Row = row, Data = employee.AutumnSemester.TotalForExam().ToString()},
+                new DataCell(){Column = "P", Row = row, Data = employee.AutumnSemester.TotalForAnotherWork().ToString()},
+                new DataCell(){Column = "Q", Row = row, Data = employee.AutumnSemester.TotalForSemester().ToString()}
             };
             foreach (var data in totalA)
             {
@@ -741,20 +751,20 @@ namespace Pmi
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
             DataCell[] total =
             {
-                new DataCell(){Column = "D", Row = row, Data = employee.LecturesForYear().ToString().Replace(',', '.')},
-                new DataCell(){Column = "E", Row = row, Data = employee.PracticalWorkForYear().ToString().Replace(',', '.')},
-                new DataCell(){Column = "F", Row = row, Data = employee.LaboratoryWorkForYear().ToString().Replace(',', '.')},
-                new DataCell(){Column = "G", Row = row, Data = employee.ConsultationsByTheoryForYear().ToString().Replace(',', '.')},
-                new DataCell(){Column = "H", Row = row, Data = employee.ConsultationsByDiplomForYear().ToString().Replace(',', '.')},
-                new DataCell(){Column = "I", Row = row, Data = employee.AspirantsForYear().ToString().Replace(',', '.')},
-                new DataCell(){Column = "J", Row = row, Data = employee.CourseworkForYear().ToString().Replace(',', '.')},
-                new DataCell(){Column = "K", Row = row, Data = employee.DiplomsForYear().ToString().Replace(',', '.')},
-                new DataCell(){Column = "L", Row = row, Data = employee.PracticeForYear().ToString().Replace(',', '.')},
-                new DataCell(){Column = "M", Row = row, Data = employee.GakForYear().ToString().Replace(',', '.')},
-                new DataCell(){Column = "N", Row = row, Data = employee.TestsForYear().ToString().Replace(',', '.')},
-                new DataCell(){Column = "O", Row = row, Data = employee.ExamForYear().ToString().Replace(',', '.')},
-                new DataCell(){Column = "P", Row = row, Data = employee.AnotherWorkForYear().ToString().Replace(',', '.')},
-                new DataCell(){Column = "Q", Row = row, Data = employee.Year().ToString().Replace(',', '.')}
+                new DataCell(){Column = "D", Row = row, Data = employee.LecturesForYear().ToString()},
+                new DataCell(){Column = "E", Row = row, Data = employee.PracticalWorkForYear().ToString()},
+                new DataCell(){Column = "F", Row = row, Data = employee.LaboratoryWorkForYear().ToString()},
+                new DataCell(){Column = "G", Row = row, Data = employee.ConsultationsByTheoryForYear().ToString()},
+                new DataCell(){Column = "H", Row = row, Data = employee.ConsultationsByDiplomForYear().ToString()},
+                new DataCell(){Column = "I", Row = row, Data = employee.AspirantsForYear().ToString()},
+                new DataCell(){Column = "J", Row = row, Data = employee.CourseworkForYear().ToString()},
+                new DataCell(){Column = "K", Row = row, Data = employee.DiplomsForYear().ToString()},
+                new DataCell(){Column = "L", Row = row, Data = employee.PracticeForYear().ToString()},
+                new DataCell(){Column = "M", Row = row, Data = employee.GakForYear().ToString()},
+                new DataCell(){Column = "N", Row = row, Data = employee.TestsForYear().ToString()},
+                new DataCell(){Column = "O", Row = row, Data = employee.ExamForYear().ToString()},
+                new DataCell(){Column = "P", Row = row, Data = employee.AnotherWorkForYear().ToString()},
+                new DataCell(){Column = "Q", Row = row, Data = employee.Year().ToString()}
             };
             foreach (var data in total)
             {
@@ -804,6 +814,28 @@ namespace Pmi
             CreateRaport(employee, worksheetPart, shareStringPart);
             workbookpart.Workbook.Save();
             spreadsheetDocument.Close();
+        }
+
+        public static void CreateRaportInFile(string path, Employee employee)
+        {
+            using (SpreadsheetDocument doc = SpreadsheetDocument.Open(path, true))
+            {
+                SharedStringTablePart shareStringPart;
+                if (doc.WorkbookPart.GetPartsOfType<SharedStringTablePart>().Count() > 0)
+                {
+                    shareStringPart = doc.WorkbookPart.GetPartsOfType<SharedStringTablePart>().First();
+                }
+                else
+                {
+                    shareStringPart = doc.WorkbookPart.AddNewPart<SharedStringTablePart>();
+                }
+                var sheet = GetSheet(doc.WorkbookPart, employee.LastName+ " " + employee.FirstName[0] + "." + employee.Patronymic[0] + ".(A4)");
+                var worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(sheet.Id));
+                //CreateRaport(employee, worksheetPart, shareStringPart);
+                //sheet.Remove();
+                //doc.WorkbookPart.DeletePart(worksheetPart);
+                doc.WorkbookPart.Workbook.Save();
+            }
         }
     }
 }
