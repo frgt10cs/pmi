@@ -5,21 +5,22 @@ using Pmi.Service.Abstraction;
 
 namespace Pmi.Service.Implimentation
 {       
-    class JsonCacheService<T> : CacheService<T>
+    class JsonCacheService : CacheService
     {
         public JsonCacheService(string path):base(path)
         {
 
         }
 
-        public override void  UploadCache()
+        public override T UploadCache<T>()
         {
-            elements = JsonConvert.DeserializeObject<List<T>>(File.ReadAllText(filePath));
+            T entity = JsonConvert.DeserializeObject<T>(File.ReadAllText(filePath));
+            return entity;
         }                             
     
-        public override void SaveChanges()
+        public override void Cache<T>(T entity)
         {
-            string json = JsonConvert.SerializeObject(elements);
+            string json = JsonConvert.SerializeObject(entity);
             File.WriteAllText(filePath, json);
         }                
     }

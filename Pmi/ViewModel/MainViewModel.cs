@@ -30,16 +30,16 @@ namespace Pmi.ViewModel
             return regex.Match(year).Success;
         }
 
-        public MainViewModel(CacheService<EmployeeViewModel> cacheServ)
+        public MainViewModel(CacheService cacheServ)
         {
-            cacheServ.UploadCache();        
-            if(cacheServ.IsEmpty)
+            var cache = cacheServ.UploadCache<List<EmployeeViewModel>>();        
+            if(cache==null)
             {
 
             }
             else
             {
-                foreach(var employee in cacheServ.GetAll())
+                foreach(var employee in cache)
                 {
                     Employees.Add(employee);
                 }

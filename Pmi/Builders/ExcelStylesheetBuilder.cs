@@ -1,9 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Pmi.Model;
 
 namespace Pmi.Builders
 {
@@ -12,11 +8,7 @@ namespace Pmi.Builders
     /// </summary>
     public class ExcelStylesheetBuilder
     {
-        private Stylesheet stylesheet;
-        private List<Font> fonts;
-        private List<Border> borders;
-        private List<Fill> fills;
-        private List<CellFormat> cellFormats;
+        private ExcelStylesheet stylesheet;                
         private uint fontStartId;
         private uint cellFormatStartId;
 
@@ -29,7 +21,7 @@ namespace Pmi.Builders
         {
             this.fontStartId = fontStartId;
             this.cellFormatStartId = cellFormatStartId;
-            Reset();            
+            stylesheet = new ExcelStylesheet();            
         }
 
         /// <summary>
@@ -37,11 +29,7 @@ namespace Pmi.Builders
         /// </summary>
         public void Reset()
         {
-            stylesheet = new Stylesheet();            
-            fonts = new List<Font>();
-            cellFormats = new List<CellFormat>();
-            borders = new List<Border>();
-            fills = new List<Fill>();
+            stylesheet.Reset();
         }
         
         /// <summary>
@@ -51,7 +39,7 @@ namespace Pmi.Builders
         /// <returns>Идентификатор добавленного шрифта</returns>
         public uint AddFont(Font font)
         {
-            fonts.Add(font);            
+            stylesheet.Fonts.Add(font);             
             return fontStartId++;
         }
 
@@ -60,10 +48,10 @@ namespace Pmi.Builders
         /// </summary>
         /// <param name="cellFormat"></param>
         /// <returns>Идентификатор добавленного формата ячейки</returns>
-        public uint AddCellFormat(CellFormat cellFormat)
+        public void AddCellFormat(int cellFormatType, CellFormat cellFormat)
         {
-            cellFormats.Add(cellFormat);
-            return cellFormatStartId++;
+            stylesheet.CellFormats.Add(cellFormat);
+            stylesheet.CellFormatIndexes.Add(cellFormatType, cellFormatStartId++);            
         }
 
         /// <summary>
@@ -71,29 +59,25 @@ namespace Pmi.Builders
         /// </summary>
         private void CheckForEmpty()
         {
-            if (fonts.Count == 0)
-                fonts.Add(new Font());
-            if (cellFormats.Count == 0)
-                cellFormats.Add(new CellFormat());
-            if (borders.Count == 0)
-                borders.Add(new Border());
-            if (fills.Count == 0)
-                fills.Add(new Fill());
+            if (stylesheet.Fonts.Count == 0)
+                stylesheet.Fonts.Add(new Font());
+            if (stylesheet.CellFormats.Count == 0)
+                stylesheet.CellFormats.Add(new CellFormat());
+            if (stylesheet.Borders.Count == 0)
+                stylesheet.Borders.Add(new Border());
+            if (stylesheet.Fills.Count == 0)
+                stylesheet.Fills.Add(new Fill());
         }
 
         /// <summary>
         /// Возвращает построенный stylesheet
         /// </summary>
         /// <returns></returns>
-        public Stylesheet GetStylesheet()
+        public ExcelStylesheet GetStylesheet()
         {
-            CheckForEmpty();
-            stylesheet.Fonts = new Fonts(fonts);
-            stylesheet.CellFormats = new CellFormats(cellFormats);
-            stylesheet.Borders = new Borders(borders);
-            stylesheet.Fills = new Fills(fills);
+            CheckForEmpty();            
             var stylesheetTemp = stylesheet;
-            Reset();
+            stylesheet = new ExcelStylesheet();            
             return stylesheetTemp;
         }
     }

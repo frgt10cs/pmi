@@ -25,9 +25,9 @@ namespace Pmi
             public string Data;
         }
 
-        CacheService<StylesheetInfo> cacheService;
+        CacheService cacheService;
 
-        public Excel(CacheService<StylesheetInfo> cacheService)
+        public Excel(CacheService cacheService)
         {
             this.cacheService = cacheService;
         }
@@ -466,33 +466,23 @@ namespace Pmi
                 //doc.WorkbookPart.DeletePart(worksheetPart);
                 doc.WorkbookPart.Workbook.Save();
             }
-        }
-
-        /// <summary>
-        /// Кэширует информацию о стилях документа
-        /// </summary>
-        /// <param name="stylesheetInfo"></param>
-        private void CacheStylesheetInfo(StylesheetInfo stylesheetInfo)
-        {                        
-            cacheService.Add(stylesheetInfo);
-            cacheService.SaveChanges();            
-        }
+        }       
 
         /// <summary>
         /// Добавляет стили к документу
         /// </summary>
         /// <param name="document"></param>
         /// <param name="stylesheet"></param>
-        private void AppendStylesToDocument(SpreadsheetDocument document, Stylesheet stylesheet)
+        private void AppendStylesToDocument(SpreadsheetDocument document, ExcelStylesheet stylesheet)
         {
             var documentStylesheet = document.WorkbookPart.WorkbookStylesPart.Stylesheet;
-            foreach (var font in stylesheet.Fonts.ChildElements)
+            foreach (var font in stylesheet.Fonts)
                 documentStylesheet.Fonts.AppendChild(font.CloneNode(true));
-            foreach (var fill in stylesheet.Fills.ChildElements)
+            foreach (var fill in stylesheet.Fills)
                 documentStylesheet.Fills.AppendChild(fill.CloneNode(true));
-            foreach (var border in stylesheet.Borders.ChildElements)
+            foreach (var border in stylesheet.Borders)
                 documentStylesheet.Borders.AppendChild(border.CloneNode(true));            
-            foreach (var cellFormat in stylesheet.Fonts.ChildElements)
+            foreach (var cellFormat in stylesheet.Fonts)
                 documentStylesheet.Fonts.AppendChild(cellFormat.CloneNode(true));
             document.Save();
         }
@@ -501,7 +491,7 @@ namespace Pmi
         /// Инициализирует необходимые стили и заносит информацию о них в кэш
         /// </summary>
         /// <param name="document"></param>
-        public void InitStyles(SpreadsheetDocument document)
+        private void InitStyles(SpreadsheetDocument document)
         {
             var workbookpart = document.WorkbookPart;
             var workStylePart = workbookpart.WorkbookStylesPart;
@@ -513,17 +503,22 @@ namespace Pmi
                 (uint)styleSheet.CellFormats.ChildElements.Count);
             ExcelStylesheetDirector director = new ExcelStylesheetDirector() { StylesheetBuilder = builder };
 
-            var reportStylesheetInfo = director.BuildReportStylesheet();
+            director.BuildReportStylesheet();
             var reportStylesheet = builder.GetStylesheet();
             #endregion
 
-            AppendStylesToDocument(document, reportStylesheet);            
-            CacheStylesheetInfo(reportStylesheetInfo);
+            AppendStylesToDocument(document, reportStylesheet);
+            cacheService.Cache(reportStylesheet.CellFormatIndexes);
         }
 
-        public void CheckStyles(SpreadsheetDocument document)
+        /// <summary>
+        /// Проверяет, совпадают ли индексе стилей в документе с индексами стилей в кэше
+        /// </summary>
+        /// <param name="document"></param>
+        /// <param name="stylesheet"></param>
+        public bool AreIndexesSame(SpreadsheetDocument document, Stylesheet stylesheet)
         {
-
+            return true;
         }
 
         #region shit

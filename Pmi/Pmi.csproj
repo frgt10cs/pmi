@@ -76,15 +76,14 @@
     <Compile Include="Directors\ExcelStylesheetDirector.cs" />
     <Compile Include="Model\Discipline.cs" />
     <Compile Include="Model\Employee.cs" />
-    <Compile Include="Model\EmployeeCache.cs" />
+    <Compile Include="Model\EmployeeViewModel.cs" />
+    <Compile Include="Model\ExcelStylesheet.cs" />
     <Compile Include="Model\RelayCommand.cs" />
     <Compile Include="Model\Semester.cs" />
     <Compile Include="Builders\ExcelFontBuilder.cs" />
     <Compile Include="Directors\FontDirector.cs" />
-    <Compile Include="Model\StylesheetInfo.cs" />
     <Compile Include="Service\Implimentation\JsonCacheService.cs" />
     <Compile Include="Service\Abstraction\CacheService.cs" />
-    <Compile Include="Builders\IFontBuilder.cs" />
     <Compile Include="ViewModel\BaseViewModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Page Include="MainWindow.xaml">

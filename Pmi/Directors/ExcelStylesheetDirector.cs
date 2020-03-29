@@ -32,18 +32,16 @@ namespace Pmi.Directors
             cellFormatDirector = new ExcelCellFormatDirector() { CellFormatBuilder = cellFormatBuilder };
         }
 
-        public StylesheetInfo BuildReportStylesheet()
-        {
-            var info = new StylesheetInfo();
+        public void BuildReportStylesheet()
+        {            
             fontDirector.BuildUniversityInfoFont();
             cellFormatDirector.BuildUniveristyInfoCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()));
-            info.AddCellFormatIndex((int)ExcelCellFormat.UniveristyInfo, stylesheetBuilder.AddCellFormat(cellFormatBuilder.GetCellFormat()));
+            stylesheetBuilder.AddCellFormat((int)ExcelCellFormat.UniveristyInfo,cellFormatBuilder.GetCellFormat());
 
             fontDirector.BuildTitleFont();
             cellFormatDirector.BuildTitleCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()));
-            info.AddCellFormatIndex((int)ExcelCellFormat.Title, stylesheetBuilder.AddCellFormat(cellFormatBuilder.GetCellFormat()));
-
-            return info;
+            stylesheetBuilder.AddCellFormat((int)ExcelCellFormat.Title,cellFormatBuilder.GetCellFormat());
+            
         }
     }
 
