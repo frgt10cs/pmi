@@ -1,60 +1,84 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
-using Pmi.Service.Interface;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pmi.Builders
 {
-    class ExcelFontBuilder:IFontBuilder
+    /// <summary>
+    /// Строитель шрифта
+    /// </summary>
+    class ExcelFontBuilder
     {
         private Font font;
-        public const string defaultFontName = "Times New Roman";
-        //private const int defaultFontSize = 14;
+        public const string defaultFontName = "Times New Roman";        
 
         public ExcelFontBuilder()
         {
             Reset();
         }
 
+        /// <summary>
+        /// Сбрасывает значения шрифта
+        /// </summary>
         public void Reset()
         {
             font = new Font();
-            AddFontName(defaultFontName);
+            SetFontName(defaultFontName);
         }
 
-        public void AddFontSize(int size)
+        /// <summary>
+        /// Устаналивает размер шрифта
+        /// </summary>
+        /// <param name="size"></param>
+        public void SetFontSize(int size)
         {
             font.FontSize = new FontSize() { Val = size };
         }
 
-        public void AddFontName(string fontName)
+        /// <summary>
+        /// Устанавливает тип шрифта
+        /// </summary>
+        /// <param name="fontName"></param>
+        public void SetFontName(string fontName)
         {
             font.FontName = new FontName() { Val = fontName };
         }
 
-        public void AddColor(string hexValue)
+        /// <summary>
+        /// Устаналивает цвет шрифта
+        /// </summary>
+        /// <param name="hexValue"></param>
+        public void SetColor(string hexValue)
         {
             font.Color = new Color() { Rgb = new DocumentFormat.OpenXml.HexBinaryValue() { Value = hexValue } };
         }
 
+        /// <summary>
+        /// Добалвяет подчеркивание
+        /// </summary>
         public void AddUnderline()
         {
             font.Underline = new Underline();
         }
 
+        /// <summary>
+        /// Добавляет к шрифту жирность
+        /// </summary>
         public void AddBold()
         {
             font.Bold = new Bold();
         }
 
+        /// <summary>
+        /// Добавляет к шрифту курсив
+        /// </summary>
         public void AddItalic()
         {
             font.Italic = new Italic();
         }
 
+        /// <summary>
+        /// Возвращает построенный шрифт
+        /// </summary>
+        /// <returns></returns>
         public Font GetFont()
         {
             Font font = this.font;

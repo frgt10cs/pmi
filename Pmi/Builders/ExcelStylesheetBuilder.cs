@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace Pmi.Builders
 {
+    /// <summary>
+    /// Строитель stylesheet
+    /// </summary>
     public class ExcelStylesheetBuilder
     {
         private Stylesheet stylesheet;
@@ -29,6 +32,9 @@ namespace Pmi.Builders
             Reset();            
         }
 
+        /// <summary>
+        /// Сбрасывает все значения stylesheet
+        /// </summary>
         public void Reset()
         {
             stylesheet = new Stylesheet();            
@@ -39,7 +45,7 @@ namespace Pmi.Builders
         }
         
         /// <summary>
-        /// 
+        /// Добавляет шрифт к stylesheet
         /// </summary>
         /// <param name="font"></param>
         /// <returns>Идентификатор добавленного шрифта</returns>
@@ -50,7 +56,7 @@ namespace Pmi.Builders
         }
 
         /// <summary>
-        /// 
+        /// Добавляет формат ячейки к stylesheet
         /// </summary>
         /// <param name="cellFormat"></param>
         /// <returns>Идентификатор добавленного формата ячейки</returns>
@@ -61,7 +67,7 @@ namespace Pmi.Builders
         }
 
         /// <summary>
-        /// Добавляет стандартное значение, если один из списков пуст. В противном случае Excel выдаст ошибку.
+        /// Добавляет стандартное значение, если один из списков пуст. В случае подгрузки пустых стилей Excel выдаёт ошибку.
         /// </summary>
         private void CheckForEmpty()
         {
@@ -75,6 +81,10 @@ namespace Pmi.Builders
                 fills.Add(new Fill());
         }
 
+        /// <summary>
+        /// Возвращает построенный stylesheet
+        /// </summary>
+        /// <returns></returns>
         public Stylesheet GetStylesheet()
         {
             CheckForEmpty();

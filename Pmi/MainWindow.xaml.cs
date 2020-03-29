@@ -1,6 +1,5 @@
 ﻿using Pmi.Model;
 using Pmi.Service.Implimentation;
-using Pmi.Service.Interface;
 using Pmi.ViewModel;
 using System;
 using System.Collections.Generic;
@@ -29,7 +28,8 @@ namespace Pmi
         public MainWindow()
         {
             InitializeComponent();
-            Excel.CreateRaportInFile("Test.xlsx", null);
+            Excel excel = new Excel(new JsonCacheService<StylesheetInfo>(ConfigurationManager.AppSettings.Get("stylesheetInfoCache")));
+            excel.CreateRaportInFile("Test.xlsx", null);
             DataContext = new MainViewModel(new JsonCacheService<EmployeeViewModel>(ConfigurationManager.AppSettings.Get("teachersCache")));                        
         }
     }
