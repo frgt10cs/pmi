@@ -25,9 +25,9 @@ namespace Pmi
             public string Data;
         }
 
-        CacheService cacheService;
+        CacheService<ExcelStylesheet> cacheService;
 
-        public Excel(CacheService cacheService)
+        public Excel(CacheService<ExcelStylesheet> cacheService)
         {
             this.cacheService = cacheService;
         }
@@ -448,7 +448,7 @@ namespace Pmi
         public void CreateRaportInFile(string path, Employee employee)
         {
             using (SpreadsheetDocument doc = SpreadsheetDocument.Open(path, true))
-            {
+            {                
                 InitStyles(doc);
                 SharedStringTablePart shareStringPart;
                 if (doc.WorkbookPart.GetPartsOfType<SharedStringTablePart>().Count() > 0)
@@ -482,8 +482,8 @@ namespace Pmi
                 documentStylesheet.Fills.AppendChild(fill.CloneNode(true));
             foreach (var border in stylesheet.Borders)
                 documentStylesheet.Borders.AppendChild(border.CloneNode(true));            
-            foreach (var cellFormat in stylesheet.Fonts)
-                documentStylesheet.Fonts.AppendChild(cellFormat.CloneNode(true));
+            foreach (var cellFormat in stylesheet.CellFormats)
+                documentStylesheet.CellFormats.AppendChild(cellFormat.CloneNode(true));
             document.Save();
         }
 
@@ -505,20 +505,38 @@ namespace Pmi
 
             director.BuildReportStylesheet();
             var reportStylesheet = builder.GetStylesheet();
-            #endregion
+            #endregion            
 
             AppendStylesToDocument(document, reportStylesheet);
-            cacheService.Cache(reportStylesheet.CellFormatIndexes);
+            cacheService.Cache(reportStylesheet);
+
+            AreIndexesSame(document);
         }
 
         /// <summary>
-        /// Проверяет, совпадают ли индексе стилей в документе с индексами стилей в кэше
+        /// Сравнивает два формата ячейки на идентичность по полям
+        /// </summary>
+        /// <param name="first"></param>
+        /// <param name="second"></param>
+        /// <returns></returns>
+        public bool AreCellFormatEquals(CellFormat first, CellFormat second)
+        {
+            return first.FontId == second.FontId && first.Alignment.Horizontal == second.Alignment.Horizontal 
+                && first.Alignment.Vertical == second.Alignment.Vertical && first.BorderId == second.BorderId && first.FillId == second.FillId;
+        }
+
+        /// <summary>
+        /// Проверяет, совпадают ли индексы стилей в документе с индексами стилей в кэше. Сравнивает только первые и последние форматы ячеек.
         /// </summary>
         /// <param name="document"></param>
         /// <param name="stylesheet"></param>
-        public bool AreIndexesSame(SpreadsheetDocument document, Stylesheet stylesheet)
+        public bool AreIndexesSame(SpreadsheetDocument document)
         {
-            return true;
+            var stylesheetCache =  cacheService.UploadCache();
+            int firstIndex = Convert.ToInt32(stylesheetCache.CellFormatIndexes.First().Value);
+            int lastIndex = Convert.ToInt32(stylesheetCache.CellFormatIndexes.Last().Value);
+            return AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[firstIndex] as CellFormat, stylesheetCache.CellFormats.First())
+                && AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[lastIndex] as CellFormat, stylesheetCache.CellFormats.Last());
         }
 
         #region shit

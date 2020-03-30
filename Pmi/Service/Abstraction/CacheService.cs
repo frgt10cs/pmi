@@ -7,12 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Pmi.Service.Abstraction
-{
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    abstract class CacheService
+{ 
+    abstract class CacheService<T>
     {
         protected string filePath;                
 
@@ -29,11 +25,11 @@ namespace Pmi.Service.Abstraction
         /// <summary>
         /// Записывает кэш в файл. Если кэш в файле уже есть, он будет переопределен.
         /// </summary>
-        public abstract void Cache<T>(T entity);
+        public abstract void Cache(T entity);
         /// <summary>
         /// Подгружает кэш из файла
         /// </summary>
-        public abstract T UploadCache<T>();
+        public abstract T UploadCache();
 
         /// <summary>
         /// Вычисляет хэш строки
