@@ -86,15 +86,15 @@ namespace Pmi
             return i;
         }
 
-        private static Sheet GetSheet(WorkbookPart workbookPart, string nameSheet)
+        private static WorksheetPart GetSheet(WorkbookPart workbookPart, string nameSheet)
         {
             Sheets sheets = workbookPart.Workbook.GetFirstChild<Sheets>();
-
+            int count = 0;
             foreach (var ItemSheets in sheets.Elements<Sheet>())
             {
-                if (ItemSheets.Name == nameSheet)
+                if (ItemSheets.Name.Value.Contains(nameSheet))
                 {
-                    return ItemSheets;
+                    count++;
                 }
             }
 
@@ -108,9 +108,9 @@ namespace Pmi
             {
                 sheetId = sheets.Elements<Sheet>().Select(s => s.SheetId.Value).Max() + 1;
             }
-            Sheet sheet = new Sheet() { Id = relationshipId, SheetId = sheetId, Name = nameSheet };
+            Sheet sheet = new Sheet() { Id = relationshipId, SheetId = sheetId, Name = nameSheet+" "+count.ToString() };
             sheets.Append(sheet);
-            return sheet;
+            return worksheetPart;
         }
 
         public static string GetCellValue(Worksheet worksheet, WorkbookPart workbookPart, string nameCell)
@@ -829,11 +829,8 @@ namespace Pmi
                 {
                     shareStringPart = doc.WorkbookPart.AddNewPart<SharedStringTablePart>();
                 }
-                var sheet = GetSheet(doc.WorkbookPart, employee.LastName+ " " + employee.FirstName[0] + "." + employee.Patronymic[0] + ".(A4)");
-                var worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(sheet.Id));
-                //CreateRaport(employee, worksheetPart, shareStringPart);
-                //sheet.Remove();
-                //doc.WorkbookPart.DeletePart(worksheetPart);
+                var worksheetPart = GetSheet(doc.WorkbookPart, employee.LastName + " " + employee.FirstName[0] + "." + employee.Patronymic[0] + ".");
+                CreateRaport(employee, worksheetPart, shareStringPart);
                 doc.WorkbookPart.Workbook.Save();
             }
         }
