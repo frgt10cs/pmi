@@ -26,7 +26,7 @@ namespace Pmi.Directors
         public void BuildYearFont()
         {
             fontBuilder.SetFontSize(13);
-            fontBuilder.AddUnderline();
+            fontBuilder.AddUnderline(DocumentFormat.OpenXml.Spreadsheet.UnderlineValues.Single);
         }
 
         public void BuildEmployeeInfoMeta()
@@ -37,7 +37,7 @@ namespace Pmi.Directors
         public void BuildEmployeeInfo()
         {
             fontBuilder.SetFontSize(14);
-            fontBuilder.AddUnderline();            
+            fontBuilder.AddUnderline(DocumentFormat.OpenXml.Spreadsheet.UnderlineValues.Single);            
         }
     }
 }

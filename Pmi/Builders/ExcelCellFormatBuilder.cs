@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
+using Pmi.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace Pmi.Builders
     /// </summary>
     public class ExcelCellFormatBuilder
     {
-        private CellFormat cellFormat;
+        private ExcelCellFormat cellFormat;
         private const HorizontalAlignmentValues defaultHorizontalValue =
             HorizontalAlignmentValues.Left;
         private const VerticalAlignmentValues defaultVerticalValue =
@@ -28,12 +29,8 @@ namespace Pmi.Builders
         /// </summary>
         public void Reset()
         {
-            cellFormat = new CellFormat();
-            cellFormat.Alignment = new Alignment()
-            {
-                Horizontal = defaultHorizontalValue,
-                Vertical = defaultVerticalValue
-            };
+            cellFormat = new ExcelCellFormat();
+            cellFormat.VerticalAlignment = defaultVerticalValue;
         }
 
         /// <summary>
@@ -42,7 +39,7 @@ namespace Pmi.Builders
         /// <param name="aligment"></param>
         public void SetHorizontalAlignment(HorizontalAlignmentValues aligment)
         {
-            cellFormat.Alignment.Horizontal = aligment;
+            cellFormat.HorizontalAlignment = aligment;
         }
 
         /// <summary>
@@ -51,23 +48,32 @@ namespace Pmi.Builders
         /// <param name="aligment"></param>
         public void SetVerticalAlignment(VerticalAlignmentValues aligment)
         {
-            cellFormat.Alignment.Vertical = aligment;
+            cellFormat.VerticalAlignment = aligment;
         }
 
         /// <summary>
-        /// Добавляет ссылку на шрифт для ячейки
+        /// Устанавливает ссылку на шрифт для ячейки
         /// </summary>
         /// <param name="fontId"></param>
-        public void AddFontId(uint fontId)
+        public void SetFontId(uint fontId)
         {
             cellFormat.FontId = fontId;
+        }
+
+        /// <summary>
+        /// Устанавливает тип для ячейки
+        /// </summary>
+        /// <param name="type"></param>
+        public void SetType(ExcelCellFormats type)
+        {
+            cellFormat.CellFormatType = type;
         }
 
         /// <summary>
         /// Возвращает построенный формат ячейки
         /// </summary>
         /// <returns></returns>
-        public CellFormat GetCellFormat()
+        public ExcelCellFormat GetCellFormat()
         {
             var cell = cellFormat;
             Reset();

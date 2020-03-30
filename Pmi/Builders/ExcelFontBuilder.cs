@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
+using Pmi.Model;
 
 namespace Pmi.Builders
 {
@@ -28,7 +29,7 @@ namespace Pmi.Builders
         /// Устаналивает размер шрифта
         /// </summary>
         /// <param name="size"></param>
-        public void SetFontSize(int size)
+        public void SetFontSize(double size)
         {
             font.FontSize = new FontSize() { Val = size };
         }
@@ -48,15 +49,15 @@ namespace Pmi.Builders
         /// <param name="hexValue"></param>
         public void SetColor(string hexValue)
         {
-            font.Color = new Color() { Rgb = new DocumentFormat.OpenXml.HexBinaryValue() { Value = hexValue } };
+            font.Color = new Color() { Rgb = hexValue };
         }
 
         /// <summary>
         /// Добалвяет подчеркивание
         /// </summary>
-        public void AddUnderline()
+        public void AddUnderline(UnderlineValues underlineValue)
         {
-            font.Underline = new Underline();
+            font.Underline = new Underline() { Val = underlineValue };
         }
 
         /// <summary>

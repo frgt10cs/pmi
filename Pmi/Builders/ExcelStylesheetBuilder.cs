@@ -48,10 +48,11 @@ namespace Pmi.Builders
         /// </summary>
         /// <param name="cellFormat"></param>
         /// <returns>Идентификатор добавленного формата ячейки</returns>
-        public void AddCellFormat(int cellFormatType, CellFormat cellFormat)
+        public void AddCellFormat(ExcelCellFormats cellFormatType, ExcelCellFormat excelCellFormat)
         {
-            stylesheet.CellFormats.Add(cellFormat);
-            stylesheet.CellFormatIndexes.Add(cellFormatType, cellFormatStartId++);            
+            excelCellFormat.CellFormatType = cellFormatType;
+            excelCellFormat.Id = cellFormatStartId++;
+            stylesheet.CellFormats.Add(excelCellFormat);           
         }
 
         /// <summary>
@@ -62,7 +63,7 @@ namespace Pmi.Builders
             if (stylesheet.Fonts.Count == 0)
                 stylesheet.Fonts.Add(new Font());
             if (stylesheet.CellFormats.Count == 0)
-                stylesheet.CellFormats.Add(new CellFormat());
+                stylesheet.CellFormats.Add(new ExcelCellFormat());
             if (stylesheet.Borders.Count == 0)
                 stylesheet.Borders.Add(new Border());
             if (stylesheet.Fills.Count == 0)

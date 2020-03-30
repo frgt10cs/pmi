@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-enum ExcelCellFormat
+public enum ExcelCellFormats
 {
     UniveristyInfo = 0,
     Title = 1
@@ -36,11 +36,11 @@ namespace Pmi.Directors
         {            
             fontDirector.BuildUniversityInfoFont();
             cellFormatDirector.BuildUniveristyInfoCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()));
-            stylesheetBuilder.AddCellFormat((int)ExcelCellFormat.UniveristyInfo,cellFormatBuilder.GetCellFormat());
+            stylesheetBuilder.AddCellFormat(ExcelCellFormats.UniveristyInfo, cellFormatBuilder.GetCellFormat());
 
             fontDirector.BuildTitleFont();
             cellFormatDirector.BuildTitleCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()));
-            stylesheetBuilder.AddCellFormat((int)ExcelCellFormat.Title,cellFormatBuilder.GetCellFormat());
+            stylesheetBuilder.AddCellFormat(ExcelCellFormats.Title, cellFormatBuilder.GetCellFormat());
             
         }
     }

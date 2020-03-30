@@ -12,10 +12,9 @@ namespace Pmi.Model
     /// Содержит стилевую информацию страницы
     /// </summary>
     public class ExcelStylesheet
-    {        
-        public Dictionary<int, uint> CellFormatIndexes { get; set; }             
+    {                           
         public List<Font> Fonts { get; set; }        
-        public List<CellFormat> CellFormats { get; set; }        
+        public List<ExcelCellFormat> CellFormats { get; set; }        
         public List<Fill> Fills { get; set; }        
         public List<Border> Borders { get; set; }
 
@@ -28,17 +27,11 @@ namespace Pmi.Model
         /// Сбрасывает все значения стилей
         /// </summary>
         public void Reset()
-        {
-            CellFormatIndexes = new Dictionary<int, uint>();
+        {            
             Fonts = new List<Font>();
-            CellFormats = new List<CellFormat>();
+            CellFormats = new List<ExcelCellFormat>();
             Fills = new List<Fill>();
             Borders = new List<Border>();
-        }
-
-        public string OuterXml()
-        {
-
-        }
+        }        
     }
 }

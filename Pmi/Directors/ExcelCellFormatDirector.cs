@@ -20,34 +20,35 @@ namespace Pmi.Directors
 
         public void BuildUniveristyInfoCellFormat(uint fontId = 0)
         {
-            builder.AddFontId(fontId);
+            builder.SetType(ExcelCellFormats.UniveristyInfo);
+            builder.SetFontId(fontId);
             builder.SetHorizontalAlignment(HorizontalAlignmentValues.Center);
         }
 
         public void BuildTitleCellFormat(uint fontId = 0)
         {
-            builder.AddFontId(fontId);
+            builder.SetFontId(fontId);
             builder.SetHorizontalAlignment(HorizontalAlignmentValues.Center);
             builder.SetVerticalAlignment(VerticalAlignmentValues.Bottom);
         }
 
         public void BuildEmployeeInfoMetaCellFormat(uint fontId = 0)
         {
-            builder.AddFontId(fontId);
+            builder.SetFontId(fontId);
             builder.SetHorizontalAlignment(HorizontalAlignmentValues.Center);
             builder.SetVerticalAlignment(VerticalAlignmentValues.Top);
         }
 
         public void BuildYearCellFormat(uint fontId = 0)
         {
-            builder.AddFontId(fontId);
+            builder.SetFontId(fontId);
             builder.SetHorizontalAlignment(HorizontalAlignmentValues.Center);
             builder.SetVerticalAlignment(VerticalAlignmentValues.Bottom);
         }
 
         public void BuildEmployeeCellFormat(uint fontId = 0)
         {
-            builder.AddFontId(fontId);
+            builder.SetFontId(fontId);
             builder.SetHorizontalAlignment(HorizontalAlignmentValues.Center);
             builder.SetVerticalAlignment(VerticalAlignmentValues.Bottom);
         }

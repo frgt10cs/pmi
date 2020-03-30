@@ -25,9 +25,9 @@ namespace Pmi
             public string Data;
         }
 
-        CacheService<ExcelStylesheet> cacheService;
+        CacheService<List<ExcelCellFormat>> cacheService;
 
-        public Excel(CacheService<ExcelStylesheet> cacheService)
+        public Excel(CacheService<List<ExcelCellFormat>> cacheService)
         {
             this.cacheService = cacheService;
         }
@@ -483,7 +483,7 @@ namespace Pmi
             foreach (var border in stylesheet.Borders)
                 documentStylesheet.Borders.AppendChild(border.CloneNode(true));            
             foreach (var cellFormat in stylesheet.CellFormats)
-                documentStylesheet.CellFormats.AppendChild(cellFormat.CloneNode(true));
+                documentStylesheet.CellFormats.AppendChild((CellFormat)cellFormat);
             document.Save();
         }
 
@@ -508,9 +508,7 @@ namespace Pmi
             #endregion            
 
             AppendStylesToDocument(document, reportStylesheet);
-            cacheService.Cache(reportStylesheet);
-
-            AreIndexesSame(document);
+            cacheService.Cache(reportStylesheet.CellFormats);            
         }
 
         /// <summary>
@@ -519,10 +517,10 @@ namespace Pmi
         /// <param name="first"></param>
         /// <param name="second"></param>
         /// <returns></returns>
-        public bool AreCellFormatEquals(CellFormat first, CellFormat second)
+        public bool AreCellFormatEquals(CellFormat first, ExcelCellFormat second)
         {
-            return first.FontId == second.FontId && first.Alignment.Horizontal == second.Alignment.Horizontal 
-                && first.Alignment.Vertical == second.Alignment.Vertical && first.BorderId == second.BorderId && first.FillId == second.FillId;
+            return first.FontId == second.FontId && first.Alignment.Horizontal.Value == second.HorizontalAlignment
+                && first.Alignment.Vertical.Value == second.VerticalAlignment && first.BorderId == second.BorderId && first.FillId == second.FillId;
         }
 
         /// <summary>
@@ -532,11 +530,11 @@ namespace Pmi
         /// <param name="stylesheet"></param>
         public bool AreIndexesSame(SpreadsheetDocument document)
         {
-            var stylesheetCache =  cacheService.UploadCache();
-            int firstIndex = Convert.ToInt32(stylesheetCache.CellFormatIndexes.First().Value);
-            int lastIndex = Convert.ToInt32(stylesheetCache.CellFormatIndexes.Last().Value);
-            return AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[firstIndex] as CellFormat, stylesheetCache.CellFormats.First())
-                && AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[lastIndex] as CellFormat, stylesheetCache.CellFormats.Last());
+            var excelCellFormats =  cacheService.UploadCache();
+            int firstId = Convert.ToInt32(excelCellFormats.First().Id);
+            int lastId = Convert.ToInt32(excelCellFormats.Last().Id);
+            return AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[firstId] as CellFormat, excelCellFormats.First())
+                && AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[lastId] as CellFormat, excelCellFormats.Last());
         }
 
         #region shit
