@@ -23,6 +23,7 @@ namespace Pmi
             public string Column;
             public uint Row;
             public string Data;
+            public uint StyleIndex;
         }
 
         CacheService<List<ExcelCellFormat>> cacheService;
@@ -33,6 +34,7 @@ namespace Pmi
         }
 
         private string[] Column = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q" };
+
         private Cell InsertCellInWorksheet(string columnName, uint rowIndex, WorksheetPart worksheetPart)
         {
             Worksheet worksheet = worksheetPart.Worksheet;
@@ -428,24 +430,6 @@ namespace Pmi
         }
         #endregion
 
-        public void CreateRaportInFile(string path, Employee employee)
-        {
-            using (SpreadsheetDocument doc = SpreadsheetDocument.Open(path, true))
-            {
-                SharedStringTablePart shareStringPart;
-                if (doc.WorkbookPart.GetPartsOfType<SharedStringTablePart>().Count() > 0)
-                {
-                    shareStringPart = doc.WorkbookPart.GetPartsOfType<SharedStringTablePart>().First();
-                }
-                else
-                {
-                    shareStringPart = doc.WorkbookPart.AddNewPart<SharedStringTablePart>();
-                }
-                var worksheetPart = GetSheet(doc.WorkbookPart, employee.LastName + " " + employee.FirstName[0] + "." + employee.Patronymic[0] + ".");
-                CreateRaport(employee, worksheetPart, shareStringPart);
-                doc.WorkbookPart.Workbook.Save();
-            }
-        }
 
 
         /// <summary>
@@ -471,7 +455,7 @@ namespace Pmi
         /// Инициализирует необходимые стили и заносит информацию о них в кэш
         /// </summary>
         /// <param name="document"></param>
-        private void InitStyles(SpreadsheetDocument document)
+        private void InitStyles(SpreadsheetDocument document, out List<ExcelCellFormat> cellFormats)
         {
             var workbookpart = document.WorkbookPart;
             var workStylePart = workbookpart.WorkbookStylesPart;
@@ -488,7 +472,8 @@ namespace Pmi
             #endregion            
 
             AppendStylesToDocument(document, reportStylesheet);
-            cacheService.Cache(reportStylesheet.CellFormats);            
+            cacheService.Cache(reportStylesheet.CellFormats);
+            cellFormats = reportStylesheet.CellFormats;
         }
 
         /// <summary>
@@ -508,15 +493,28 @@ namespace Pmi
         /// </summary>
         /// <param name="document"></param>
         /// <param name="stylesheet"></param>
-        public bool AreIndexesSame(SpreadsheetDocument document)
+        public bool AreIndexesSame(SpreadsheetDocument document, out List<ExcelCellFormat> cellFormats)
         {
             var excelCellFormats =  cacheService.UploadCache();
             int firstId = Convert.ToInt32(excelCellFormats.First().Id);
             int lastId = Convert.ToInt32(excelCellFormats.Last().Id);
-            return AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[firstId] as CellFormat, excelCellFormats.First())
-                && AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[lastId] as CellFormat, excelCellFormats.Last());
+            if (document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements.Count < firstId
+                || document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements.Count < lastId)
+            {
+                cellFormats = null;
+                return false;
+            }
+            if (AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[firstId] as CellFormat, excelCellFormats.First())
+                && AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[lastId] as CellFormat, excelCellFormats.Last()))
+            {
+                cellFormats = excelCellFormats;
+                return true;
+            }
+            cellFormats = null;
+            return false;
         }
-        public void CreateRaport(Employee employee, WorksheetPart worksheetPart, SharedStringTablePart shareStringPart)
+
+        public void CreateRaport(Employee employee, WorksheetPart worksheetPart, SharedStringTablePart shareStringPart, List<ExcelCellFormat> cellFormats)
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
             #region CreateCloumn
@@ -608,53 +606,66 @@ namespace Pmi
             }
             #endregion
             #region CreateRow
+            
+            uint Total = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.Total).Id;
+            uint ColumnName = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.ColumnName).Id;
+            uint ColumnNumber = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.ColumnNumber).Id;
+            uint DisciplineCode = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.DisciplineCode).Id;
+            uint DisciplineName = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.DisciplineName).Id;
+            uint GroupPlan = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.GroupPlan).Id;
+            uint ColumnTotal = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.ColumnTotal).Id;
+            
             CellData[] cells =
             {
-                new CellData(){Column = "A", Row = 1, Data = "федеральное государственное бюджетное образовательное учреждение высшего образования "},
-                new CellData(){Column = "A", Row = 2, Data = "«Казанский национальный исследовательский технический университет им. А.Н. Туполева-КАИ» (КНИТУ-КАИ)"},
-                new CellData(){Column = "M", Row = 4, Data = "УТВЕРЖДАЮ"},
-                new CellData(){Column = "D", Row = 5, Data = "ПЛАН УЧЕБНОЙ НАГРУЗКИ"},
-                new CellData(){Column = "M", Row = 5, Data = "Зав. кафедрой ПМИ"},
-                new CellData(){Column = "M", Row = 6, Data = "Зайдуллин С.С."},
-                new CellData(){Column = "O", Row = 7, Data = "подпись, ФИО"},
-                new CellData(){Column = "C", Row = 7, Data = $"{employee.Rank}, {employee.FirstName} {employee.LastName} {employee.Patronymic}"},
-                new CellData(){Column = "C", Row = 8, Data = "должность, ФИО, ученая степень, ученое звание, доля ставки, штатность"},
-                
-                new CellData(){Column = "A", Row = 11, Data = "Код ОП,\nиндекс дисциплины,\nнаименование дисциплины"},
-                new CellData(){Column = "C", Row = 11, Data = "Группа"},
-                new CellData(){Column = "D", Row = 11, Data = "Лекц"},
-                new CellData(){Column = "E", Row = 11, Data = "Практ"},
-                new CellData(){Column = "F", Row = 11, Data = "Лаб"},
-                new CellData(){Column = "G", Row = 11, Data = "Консульт. студ."},
-                new CellData(){Column = "I", Row = 11, Data = "Руководство"},
-                new CellData(){Column = "M", Row = 11, Data = "ГЭК"},
-                new CellData(){Column = "N", Row = 11, Data = "ЗАЧ"},
-                new CellData(){Column = "O", Row = 11, Data = "ЭКЗ"},
-                new CellData(){Column = "P", Row = 11, Data = "Другие  виды уч. работы"},
-                new CellData(){Column = "Q", Row = 11, Data = " ВСЕГО"},
-                new CellData(){Column = "G", Row = 12, Data = "по теор. курсу"},
-                new CellData(){Column = "H", Row = 12, Data = "по дипл. проект."},
-                new CellData(){Column = "I", Row = 12, Data = "асп-ми"},
-                new CellData(){Column = "J", Row = 12, Data = "курс. проект. (раб.)"},
-                new CellData(){Column = "K", Row = 12, Data = "дипл. проект."},
-                new CellData(){Column = "L", Row = 12, Data = "практ."},
+                new CellData(){Column = "A", Row = 1, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.UniveristyInfo).Id, Data = "федеральное государственное бюджетное образовательное учреждение высшего образования "},
+                new CellData(){Column = "A", Row = 2, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.UniveristyInfo).Id, Data = "«Казанский национальный исследовательский технический университет им. А.Н. Туполева-КАИ» (КНИТУ-КАИ)"},
+                new CellData(){Column = "M", Row = 4, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.Approve).Id, Data = "УТВЕРЖДАЮ"},
+                new CellData(){Column = "D", Row = 5, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.Title).Id, Data = "ПЛАН УЧЕБНОЙ НАГРУЗКИ"},
+                new CellData(){Column = "M", Row = 5, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.Position).Id, Data = "Зав. кафедрой ПМИ"},
+                new CellData(){Column = "M", Row = 6, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.ManagerInfo).Id, Data = "Зайдуллин С.С."},
+                new CellData(){Column = "O", Row = 7, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.ManagerInfoMeta).Id, Data = "подпись, ФИО"},
+                new CellData(){Column = "C", Row = 7, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.EmployeeInfo).Id, Data = $"{employee.Rank}, {employee.FirstName} {employee.LastName} {employee.Patronymic}"},
+                new CellData(){Column = "C", Row = 8, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.EmployeeInfoMeta).Id, Data = "должность, ФИО, ученая степень, ученое звание, доля ставки, штатность"},
+                new CellData(){Column = "C", Row = 9, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.Year).Id, Data = "на  2019 / 2020 учебный год"},
+
+                new CellData(){Column = "A", StyleIndex = ColumnName, Row = 11, Data = "Код ОП,\nиндекс дисциплины,\nнаименование дисциплины"},
+                new CellData(){Column = "C", StyleIndex = ColumnName, Row = 11, Data = "Группа"},
+                new CellData(){Column = "D", StyleIndex = ColumnName, Row = 11, Data = "Лекц"},
+                new CellData(){Column = "E", StyleIndex = ColumnName, Row = 11, Data = "Практ"},
+                new CellData(){Column = "F", StyleIndex = ColumnName, Row = 11, Data = "Лаб"},
+                new CellData(){Column = "G", StyleIndex = ColumnName, Row = 11, Data = "Консульт. студ."},
+                new CellData(){Column = "I", StyleIndex = ColumnName, Row = 11, Data = "Руководство"},
+                new CellData(){Column = "M", StyleIndex = ColumnName, Row = 11, Data = "ГЭК"},
+                new CellData(){Column = "N", StyleIndex = ColumnName, Row = 11, Data = "ЗАЧ"},
+                new CellData(){Column = "O", StyleIndex = ColumnName, Row = 11, Data = "ЭКЗ"},
+                new CellData(){Column = "P", StyleIndex = ColumnName, Row = 11, Data = "Другие  виды уч. работы"},
+                new CellData(){Column = "Q", StyleIndex = Total, Row = 11, Data = " ВСЕГО"},
+                new CellData(){Column = "G", StyleIndex = ColumnName, Row = 12, Data = "по теор. курсу"},
+                new CellData(){Column = "H", StyleIndex = ColumnName, Row = 12, Data = "по дипл. проект."},
+                new CellData(){Column = "I", StyleIndex = ColumnName, Row = 12, Data = "асп-ми"},
+                new CellData(){Column = "J", StyleIndex = ColumnName, Row = 12, Data = "курс. проект. (раб.)"},
+                new CellData(){Column = "K", StyleIndex = ColumnName, Row = 12, Data = "дипл. проект."},
+                new CellData(){Column = "L", StyleIndex = ColumnName, Row = 12, Data = "практ."},
             };
             foreach (var data in cells)
             {
                 Cell cell = InsertCellInWorksheet(data.Column, data.Row, worksheetPart);
                 cell.CellValue = new CellValue(InsertSharedStringItem(data.Data, shareStringPart).ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+                cell.StyleIndex = data.StyleIndex;
             }
             for (uint i = 2; i < 17; i++)
             {
                 Cell cell = InsertCellInWorksheet(Column[i], 14, worksheetPart);
                 cell.CellValue = new CellValue(i.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = ColumnNumber;
                 if (i == 2)
                 {
                     cell = InsertCellInWorksheet("A", 14, worksheetPart);
                     cell.CellValue = new CellValue("1");
                     cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                    cell.StyleIndex = ColumnNumber;
                 }
             }
             #endregion
@@ -662,6 +673,7 @@ namespace Pmi
             Cell semCell = InsertCellInWorksheet("A", 15, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("О  С  Е  Н  Н  И  Й     С  Е  М  Е  С  Т  Р  ", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+            semCell.StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.SemesterName).Id;
 
             uint row = 16;
             foreach (var discipline in employee.SpringSemester.Disciplines)
@@ -669,54 +681,71 @@ namespace Pmi
                 Cell cell = InsertCellInWorksheet("A", row, worksheetPart);
                 cell.CellValue = new CellValue(InsertSharedStringItem(discipline.CodeOP, shareStringPart).ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+                cell.StyleIndex = DisciplineCode;
                 cell = InsertCellInWorksheet("B", row, worksheetPart);
                 cell.CellValue = new CellValue(InsertSharedStringItem(discipline.Name, shareStringPart).ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+                cell.StyleIndex = DisciplineName;
                 cell = InsertCellInWorksheet("C", row, worksheetPart);
                 cell.CellValue = new CellValue(InsertSharedStringItem(String.Join(", ", discipline.Groups), shareStringPart).ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("D", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.Lectures.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("E", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.PracticalWork.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("F", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.LaboratoryWork.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("G", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.ConsultationsByTheory.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("H", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.ConsultationsByDiplom.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("I", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.Aspirants.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("J", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.Coursework.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("K", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.Diploms.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("L", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.Practice.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("M", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.GEK.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("N", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.Tests.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("O", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.Exam.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("P", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.AnotherWork.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("Q", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.TotalForThisDiscipline().ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 row++;
             }
             mergeCells.Append(new MergeCell() { Reference = new StringValue($"A{row}:C{row}") });
@@ -725,28 +754,30 @@ namespace Pmi
             semCell = InsertCellInWorksheet("A", row, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("Итого за осенний семестр", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+            semCell.StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.SemesterTotalLabel).Id;
             CellData[] totalS =
             {
-                new CellData(){Column = "D", Row = row, Data = employee.SpringSemester.TotalForLectures().ToString()},
-                new CellData(){Column = "E", Row = row, Data = employee.SpringSemester.TotalForPracticalWork().ToString()},
-                new CellData(){Column = "F", Row = row, Data = employee.SpringSemester.TotalForLaboratoryWork().ToString()},
-                new CellData(){Column = "G", Row = row, Data = employee.SpringSemester.TotalForConsultationsByTheory().ToString()},
-                new CellData(){Column = "H", Row = row, Data = employee.SpringSemester.TotalForConsultationsByDiplom().ToString()},
-                new CellData(){Column = "I", Row = row, Data = employee.SpringSemester.TotalForAspirants().ToString()},
-                new CellData(){Column = "J", Row = row, Data = employee.SpringSemester.TotalForCoursework().ToString()},
-                new CellData(){Column = "K", Row = row, Data = employee.SpringSemester.TotalForDiploms().ToString()},
-                new CellData(){Column = "L", Row = row, Data = employee.SpringSemester.TotalForPractice().ToString()},
-                new CellData(){Column = "M", Row = row, Data = employee.SpringSemester.TotalForGEK().ToString()},
-                new CellData(){Column = "N", Row = row, Data = employee.SpringSemester.TotalForTests().ToString()},
-                new CellData(){Column = "O", Row = row, Data = employee.SpringSemester.TotalForExam().ToString()},
-                new CellData(){Column = "P", Row = row, Data = employee.SpringSemester.TotalForAnotherWork().ToString()},
-                new CellData(){Column = "Q", Row = row, Data = employee.SpringSemester.TotalForSemester().ToString()}
+                new CellData(){Column = "D", Row = row, StyleIndex = ColumnTotal, Data = employee.SpringSemester.TotalForLectures().ToString()},
+                new CellData(){Column = "E", Row = row, StyleIndex = ColumnTotal, Data = employee.SpringSemester.TotalForPracticalWork().ToString()},
+                new CellData(){Column = "F", Row = row, StyleIndex = ColumnTotal, Data = employee.SpringSemester.TotalForLaboratoryWork().ToString()},
+                new CellData(){Column = "G", Row = row, StyleIndex = ColumnTotal, Data = employee.SpringSemester.TotalForConsultationsByTheory().ToString()},
+                new CellData(){Column = "H", Row = row, StyleIndex = ColumnTotal, Data = employee.SpringSemester.TotalForConsultationsByDiplom().ToString()},
+                new CellData(){Column = "I", Row = row, StyleIndex = ColumnTotal, Data = employee.SpringSemester.TotalForAspirants().ToString()},
+                new CellData(){Column = "J", Row = row, StyleIndex = ColumnTotal, Data = employee.SpringSemester.TotalForCoursework().ToString()},
+                new CellData(){Column = "K", Row = row, StyleIndex = ColumnTotal, Data = employee.SpringSemester.TotalForDiploms().ToString()},
+                new CellData(){Column = "L", Row = row, StyleIndex = ColumnTotal, Data = employee.SpringSemester.TotalForPractice().ToString()},
+                new CellData(){Column = "M", Row = row, StyleIndex = ColumnTotal, Data = employee.SpringSemester.TotalForGEK().ToString()},
+                new CellData(){Column = "N", Row = row, StyleIndex = ColumnTotal, Data = employee.SpringSemester.TotalForTests().ToString()},
+                new CellData(){Column = "O", Row = row, StyleIndex = ColumnTotal, Data = employee.SpringSemester.TotalForExam().ToString()},
+                new CellData(){Column = "P", Row = row, StyleIndex = ColumnTotal, Data = employee.SpringSemester.TotalForAnotherWork().ToString()},
+                new CellData(){Column = "Q", Row = row, StyleIndex = ColumnTotal, Data = employee.SpringSemester.TotalForSemester().ToString()}
             };
             foreach (var data in totalS)
             {
                 Cell cell = InsertCellInWorksheet(data.Column, data.Row, worksheetPart);
                 cell.CellValue = new CellValue(data.Data);
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = data.StyleIndex;
             }
             totalS = null;
             #endregion
@@ -756,6 +787,7 @@ namespace Pmi
             semCell = InsertCellInWorksheet("A", row, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("В  Е  С  Е  Н  Н  И  Й     С  Е  М  Е  С  Т  Р  ", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+            semCell.StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.SemesterName).Id;
             row++;
 
             foreach (var discipline in employee.AutumnSemester.Disciplines)
@@ -763,54 +795,71 @@ namespace Pmi
                 Cell cell = InsertCellInWorksheet("A", row, worksheetPart);
                 cell.CellValue = new CellValue(InsertSharedStringItem(discipline.CodeOP, shareStringPart).ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+                cell.StyleIndex = DisciplineCode;
                 cell = InsertCellInWorksheet("B", row, worksheetPart);
                 cell.CellValue = new CellValue(InsertSharedStringItem(discipline.Name, shareStringPart).ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+                cell.StyleIndex = DisciplineName;
                 cell = InsertCellInWorksheet("C", row, worksheetPart);
                 cell.CellValue = new CellValue(InsertSharedStringItem(String.Join(", ", discipline.Groups), shareStringPart).ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("D", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.Lectures.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("E", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.PracticalWork.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("F", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.LaboratoryWork.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("G", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.ConsultationsByTheory.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("H", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.ConsultationsByDiplom.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("I", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.Aspirants.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("J", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.Coursework.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("K", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.Diploms.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("L", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.Practice.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("M", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.GEK.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("N", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.Tests.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("O", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.Exam.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("P", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.AnotherWork.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 cell = InsertCellInWorksheet("Q", row, worksheetPart);
                 cell.CellValue = new CellValue(discipline.TotalForThisDiscipline().ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = GroupPlan;
                 row++;
             }
             mergeCells.Append(new MergeCell() { Reference = new StringValue($"A{row}:C{row}") });
@@ -818,28 +867,30 @@ namespace Pmi
             semCell = InsertCellInWorksheet("A", row, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("Итого за весенний семестр", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+            semCell.StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.SemesterTotalLabel).Id;
             CellData[] totalA =
             {
-                new CellData(){Column = "D", Row = row, Data = employee.AutumnSemester.TotalForLectures().ToString()},
-                new CellData(){Column = "E", Row = row, Data = employee.AutumnSemester.TotalForPracticalWork().ToString()},
-                new CellData(){Column = "F", Row = row, Data = employee.AutumnSemester.TotalForLaboratoryWork().ToString()},
-                new CellData(){Column = "G", Row = row, Data = employee.AutumnSemester.TotalForConsultationsByTheory().ToString()},
-                new CellData(){Column = "H", Row = row, Data = employee.AutumnSemester.TotalForConsultationsByDiplom().ToString()},
-                new CellData(){Column = "I", Row = row, Data = employee.AutumnSemester.TotalForAspirants().ToString()},
-                new CellData(){Column = "J", Row = row, Data = employee.AutumnSemester.TotalForCoursework().ToString()},
-                new CellData(){Column = "K", Row = row, Data = employee.AutumnSemester.TotalForDiploms().ToString()},
-                new CellData(){Column = "L", Row = row, Data = employee.AutumnSemester.TotalForPractice().ToString()},
-                new CellData(){Column = "M", Row = row, Data = employee.AutumnSemester.TotalForGEK().ToString()},
-                new CellData(){Column = "N", Row = row, Data = employee.AutumnSemester.TotalForTests().ToString()},
-                new CellData(){Column = "O", Row = row, Data = employee.AutumnSemester.TotalForExam().ToString()},
-                new CellData(){Column = "P", Row = row, Data = employee.AutumnSemester.TotalForAnotherWork().ToString()},
-                new CellData(){Column = "Q", Row = row, Data = employee.AutumnSemester.TotalForSemester().ToString()}
+                new CellData(){Column = "D", Row = row, StyleIndex = ColumnTotal, Data = employee.AutumnSemester.TotalForLectures().ToString()},
+                new CellData(){Column = "E", Row = row, StyleIndex = ColumnTotal, Data = employee.AutumnSemester.TotalForPracticalWork().ToString()},
+                new CellData(){Column = "F", Row = row, StyleIndex = ColumnTotal, Data = employee.AutumnSemester.TotalForLaboratoryWork().ToString()},
+                new CellData(){Column = "G", Row = row, StyleIndex = ColumnTotal, Data = employee.AutumnSemester.TotalForConsultationsByTheory().ToString()},
+                new CellData(){Column = "H", Row = row, StyleIndex = ColumnTotal, Data = employee.AutumnSemester.TotalForConsultationsByDiplom().ToString()},
+                new CellData(){Column = "I", Row = row, StyleIndex = ColumnTotal, Data = employee.AutumnSemester.TotalForAspirants().ToString()},
+                new CellData(){Column = "J", Row = row, StyleIndex = ColumnTotal, Data = employee.AutumnSemester.TotalForCoursework().ToString()},
+                new CellData(){Column = "K", Row = row, StyleIndex = ColumnTotal, Data = employee.AutumnSemester.TotalForDiploms().ToString()},
+                new CellData(){Column = "L", Row = row, StyleIndex = ColumnTotal, Data = employee.AutumnSemester.TotalForPractice().ToString()},
+                new CellData(){Column = "M", Row = row, StyleIndex = ColumnTotal, Data = employee.AutumnSemester.TotalForGEK().ToString()},
+                new CellData(){Column = "N", Row = row, StyleIndex = ColumnTotal, Data = employee.AutumnSemester.TotalForTests().ToString()},
+                new CellData(){Column = "O", Row = row, StyleIndex = ColumnTotal, Data = employee.AutumnSemester.TotalForExam().ToString()},
+                new CellData(){Column = "P", Row = row, StyleIndex = ColumnTotal, Data = employee.AutumnSemester.TotalForAnotherWork().ToString()},
+                new CellData(){Column = "Q", Row = row, StyleIndex = ColumnTotal, Data = employee.AutumnSemester.TotalForSemester().ToString()}
             };
             foreach (var data in totalA)
             {
                 Cell cell = InsertCellInWorksheet(data.Column, data.Row, worksheetPart);
                 cell.CellValue = new CellValue(data.Data);
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = data.StyleIndex;
             }
             totalA = null;
             #endregion
@@ -851,28 +902,30 @@ namespace Pmi
             semCell = InsertCellInWorksheet("A", row, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("ВСЕГО ЗА ГОД", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+            semCell.StyleIndex = Total;
             CellData[] total =
             {
-                new CellData(){Column = "D", Row = row, Data = employee.LecturesForYear().ToString()},
-                new CellData(){Column = "E", Row = row, Data = employee.PracticalWorkForYear().ToString()},
-                new CellData(){Column = "F", Row = row, Data = employee.LaboratoryWorkForYear().ToString()},
-                new CellData(){Column = "G", Row = row, Data = employee.ConsultationsByTheoryForYear().ToString()},
-                new CellData(){Column = "H", Row = row, Data = employee.ConsultationsByDiplomForYear().ToString()},
-                new CellData(){Column = "I", Row = row, Data = employee.AspirantsForYear().ToString()},
-                new CellData(){Column = "J", Row = row, Data = employee.CourseworkForYear().ToString()},
-                new CellData(){Column = "K", Row = row, Data = employee.DiplomsForYear().ToString()},
-                new CellData(){Column = "L", Row = row, Data = employee.PracticeForYear().ToString()},
-                new CellData(){Column = "M", Row = row, Data = employee.GakForYear().ToString()},
-                new CellData(){Column = "N", Row = row, Data = employee.TestsForYear().ToString()},
-                new CellData(){Column = "O", Row = row, Data = employee.ExamForYear().ToString()},
-                new CellData(){Column = "P", Row = row, Data = employee.AnotherWorkForYear().ToString()},
-                new CellData(){Column = "Q", Row = row, Data = employee.Year().ToString()}
+                new CellData(){Column = "D", Row = row, StyleIndex = Total, Data = employee.LecturesForYear().ToString()},
+                new CellData(){Column = "E", Row = row, StyleIndex = Total, Data = employee.PracticalWorkForYear().ToString()},
+                new CellData(){Column = "F", Row = row, StyleIndex = Total, Data = employee.LaboratoryWorkForYear().ToString()},
+                new CellData(){Column = "G", Row = row, StyleIndex = Total, Data = employee.ConsultationsByTheoryForYear().ToString()},
+                new CellData(){Column = "H", Row = row, StyleIndex = Total, Data = employee.ConsultationsByDiplomForYear().ToString()},
+                new CellData(){Column = "I", Row = row, StyleIndex = Total, Data = employee.AspirantsForYear().ToString()},
+                new CellData(){Column = "J", Row = row, StyleIndex = Total, Data = employee.CourseworkForYear().ToString()},
+                new CellData(){Column = "K", Row = row, StyleIndex = Total, Data = employee.DiplomsForYear().ToString()},
+                new CellData(){Column = "L", Row = row, StyleIndex = Total, Data = employee.PracticeForYear().ToString()},
+                new CellData(){Column = "M", Row = row, StyleIndex = Total, Data = employee.GakForYear().ToString()},
+                new CellData(){Column = "N", Row = row, StyleIndex = Total, Data = employee.TestsForYear().ToString()},
+                new CellData(){Column = "O", Row = row, StyleIndex = Total, Data = employee.ExamForYear().ToString()},
+                new CellData(){Column = "P", Row = row, StyleIndex = Total, Data = employee.AnotherWorkForYear().ToString()},
+                new CellData(){Column = "Q", Row = row, StyleIndex = Total, Data = employee.Year().ToString()}
             };
             foreach (var data in total)
             {
                 Cell cell = InsertCellInWorksheet(data.Column, data.Row, worksheetPart);
                 cell.CellValue = new CellValue(data.Data);
                 cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.StyleIndex = data.StyleIndex;
             }
             total = null;
             #endregion
@@ -886,7 +939,9 @@ namespace Pmi
             semCell = InsertCellInWorksheet("K", row, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("подпись преподавателя", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+            semCell.StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.TeacherSignature).Id;
         }
+
         public void CreateRaportSeparate(string path, Employee employee)
         {
             SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Create(path, SpreadsheetDocumentType.Workbook);
@@ -912,9 +967,49 @@ namespace Pmi
             {
                 shareStringPart = workbookpart.AddNewPart<SharedStringTablePart>();
             }
-            CreateRaport(employee, worksheetPart, shareStringPart);
+
+            spreadsheetDocument.WorkbookPart.AddNewPart<WorkbookStylesPart>();
+            spreadsheetDocument.WorkbookPart.WorkbookStylesPart.Stylesheet = new Stylesheet()
+            {
+                Borders = new Borders(),
+                Fonts = new Fonts(),
+                Fills = new Fills(),
+                CellFormats = new CellFormats()
+            };
+            ExcelStylesheetBuilder builder = new ExcelStylesheetBuilder(0, 0);
+            ExcelStylesheetDirector director = new ExcelStylesheetDirector() { StylesheetBuilder = builder };
+            director.BuildReportStylesheet();
+            var reportStylesheet = builder.GetStylesheet();
+            AppendStylesToDocument(spreadsheetDocument, reportStylesheet);
+
+            CreateRaport(employee, worksheetPart, shareStringPart, reportStylesheet.CellFormats);
             workbookpart.Workbook.Save();
             spreadsheetDocument.Close();
-        }       
+        }
+
+        public void CreateRaportInFile(string path, Employee employee)
+        {
+            using (SpreadsheetDocument doc = SpreadsheetDocument.Open(path, true))
+            {
+                List<ExcelCellFormat> cellFormats = null;
+                if (!AreIndexesSame(doc, out cellFormats))
+                {
+                    InitStyles(doc, out cellFormats);
+                }
+                SharedStringTablePart shareStringPart;
+                if (doc.WorkbookPart.GetPartsOfType<SharedStringTablePart>().Count() > 0)
+                {
+                    shareStringPart = doc.WorkbookPart.GetPartsOfType<SharedStringTablePart>().First();
+                }
+                else
+                {
+                    shareStringPart = doc.WorkbookPart.AddNewPart<SharedStringTablePart>();
+                }
+                var worksheetPart = GetSheet(doc.WorkbookPart, employee.LastName + " " + employee.FirstName[0] + "." + employee.Patronymic[0] + ".");
+                CreateRaport(employee, worksheetPart, shareStringPart, cellFormats);
+                doc.WorkbookPart.Workbook.Save();
+            }
+        }
+
     }
 }
