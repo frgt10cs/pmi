@@ -74,6 +74,9 @@
     <Compile Include="Builders\ExcelStylesheetBuilder.cs" />
     <Compile Include="Directors\ExcelCellFormatDirector.cs" />
     <Compile Include="Directors\ExcelStylesheetDirector.cs" />
+    <Compile Include="LoadingWindow.xaml.cs">
+      <DependentUpon>LoadingWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Model\Discipline.cs" />
     <Compile Include="Model\Employee.cs" />
     <Compile Include="Model\EmployeeViewModel.cs" />
@@ -87,7 +90,12 @@
     <Compile Include="Service\Abstraction\CacheService.cs" />
     <Compile Include="Service\Implimentation\XmlCacheService.cs" />
     <Compile Include="ViewModel\BaseViewModel.cs" />
+    <Compile Include="ViewModel\LoadingViewModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
+    <Page Include="LoadingWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

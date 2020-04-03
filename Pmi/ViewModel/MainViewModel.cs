@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using Pmi.Model;
@@ -54,9 +55,13 @@ namespace Pmi.ViewModel
 
             createReport = new RelayCommand(obj =>
             {
-                MessageBox.Show("in the future");
+                var LoadVM = new LoadingViewModel();
+                var Load = new LoadingWindow();
+                Load.DataContext = LoadVM;
+                LoadVM.OnRequestClose += (s, e) => Load.Close();
+                Load.ShowDialog();
             },
-            _obj => selectedEmployee != null && selectedMode != null && AreYear());
+            _obj => selectedEmployee != null && selectedMode != null );
         }                   
     }
 }
