@@ -35,8 +35,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DocumentFormat.OpenXml, Version=2.10.0.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
-      <HintPath>..\packages\DocumentFormat.OpenXml.2.10.0\lib\net46\DocumentFormat.OpenXml.dll</HintPath>
+    <Reference Include="DocumentFormat.OpenXml, Version=2.10.1.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
+      <HintPath>..\packages\DocumentFormat.OpenXml.2.10.1\lib\net46\DocumentFormat.OpenXml.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -70,13 +70,22 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Builders\ExcelCellFormatBuilder.cs" />
+    <Compile Include="Builders\ExcelStylesheetBuilder.cs" />
+    <Compile Include="Directors\ExcelCellFormatDirector.cs" />
+    <Compile Include="Directors\ExcelStylesheetDirector.cs" />
     <Compile Include="Model\Discipline.cs" />
     <Compile Include="Model\Employee.cs" />
-    <Compile Include="Model\EmployeeCache.cs" />
+    <Compile Include="Model\EmployeeViewModel.cs" />
+    <Compile Include="Model\ExcelCellFormat.cs" />
+    <Compile Include="Model\ExcelStylesheet.cs" />
     <Compile Include="Model\RelayCommand.cs" />
     <Compile Include="Model\Semester.cs" />
+    <Compile Include="Builders\ExcelFontBuilder.cs" />
+    <Compile Include="Directors\FontDirector.cs" />
     <Compile Include="Service\Implimentation\JsonCacheService.cs" />
-    <Compile Include="Service\Interface\ICacheService.cs" />
+    <Compile Include="Service\Abstraction\CacheService.cs" />
+    <Compile Include="Service\Implimentation\XmlCacheService.cs" />
     <Compile Include="ViewModel\BaseViewModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Page Include="MainWindow.xaml">

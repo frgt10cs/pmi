@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using Pmi.Model;
-using Pmi.Service.Interface;
+using Pmi.Service.Abstraction;
 
 namespace Pmi.ViewModel
 {
@@ -30,16 +30,16 @@ namespace Pmi.ViewModel
             return regex.Match(year).Success;
         }
 
-        public MainViewModel(ICacheService<EmployeeViewModel> cacheServ)
+        public MainViewModel(CacheService<List<EmployeeViewModel>> cacheServ)
         {
-            cacheServ.UploadCache();        
-            if(cacheServ.IsEmpty)
+            var cache = cacheServ.UploadCache();        
+            if(cache==null)
             {
 
             }
             else
             {
-                foreach(var employee in cacheServ.GetAll())
+                foreach(var employee in cache)
                 {
                     Employees.Add(employee);
                 }

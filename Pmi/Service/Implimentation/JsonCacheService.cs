@@ -1,62 +1,74 @@
 ﻿using Newtonsoft.Json;
-using Pmi.Service.Interface;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Security.Cryptography;
+using Pmi.Service.Abstraction;
+using DocumentFormat.OpenXml.Spreadsheet;
+using System;
 
 namespace Pmi.Service.Implimentation
-{   
-    class JsonCacheService<T> : ICacheService<T>
+{       
+    class JsonCacheService<T> : CacheService<T>
     {
-        private string filePath;
-        private List<T> elements;
-        public bool IsEmpty { get { return !elements.Any(); } }
-
-        public JsonCacheService(string filePath)
+        public JsonCacheService(string path):base(path)
         {
-            if(!File.Exists(filePath))
-            {
-                File.WriteAllText(filePath, "[]");                
-            }
-            this.filePath = filePath;
+
         }
 
-        public void UploadCache()
+        public override T UploadCache()
         {
-            elements = JsonConvert.DeserializeObject<List<T>>(File.ReadAllText(filePath));
-        }
-
-        public void Add(T item)
-        {
-            elements.Add(item);
-        }
-
-        public void SetAll(List<T> items)
-        {
-            elements = items;
-        }
-
-        public List<T> GetAll()
-        {                      
-            return elements;
-        }
-
-        public void SaveChanges()
-        {
-            string json = JsonConvert.SerializeObject(elements);
+            T entity = JsonConvert.DeserializeObject<T>(File.ReadAllText(filePath));
+            return entity;
+        }                             
+    
+        public override void Cache(T entity)
+        {            
+            string json = JsonConvert.SerializeObject(entity, new FontConvertor());
             File.WriteAllText(filePath, json);
-        }
-        
-        private string GetHash(string value)
+        }                
+    }
+
+    public class FontConvertor : JsonConverter<Font>
+    {
+        public override Font ReadJson(JsonReader reader, Type objectType, Font existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            using (var md5 = MD5.Create())
-            {
-                return Encoding.UTF8.GetString(md5.ComputeHash(Encoding.UTF8.GetBytes(value)));
-            }
+            Pmi.Builders.ExcelFontBuilder builder = new Builders.ExcelFontBuilder();
+            builder.SetFontName(reader.ReadAsString());
+            builder.SetFontSize((int)reader.ReadAsInt32());
+            builder.SetColor(reader.ReadAsString());
+            if (reader.ReadAsString() != null)
+                builder.AddBold();
+            if (reader.ReadAsString() != null)
+                builder.AddItalic();
+            return builder.GetFont();
+        }
+
+        public override void WriteJson(JsonWriter writer, Font value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+            writer.WritePropertyName("FontName");
+            writer.WriteValue(value.FontName.Val.Value);
+            writer.WritePropertyName("FontSize");
+            writer.WriteValue(value.FontSize.Val.Value);
+            writer.WritePropertyName("Color");
+            writer.WriteValue(value.Color?.Rgb.Value);
+            writer.WritePropertyName("Bold");
+            writer.WriteValue(value.Bold?.Val?.Value);
+            writer.WritePropertyName("Italic");
+            writer.WriteValue(value.Italic?.Val?.Value);
+            writer.WriteEndObject();
+        }
+    }
+
+    public class FontsConvertor : JsonConverter<List<Font>>
+    {     
+        public override List<Font> ReadJson(JsonReader reader, Type objectType, List<Font> existingValue, bool hasExistingValue, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }        
+
+        public override void WriteJson(JsonWriter writer, List<Font> value, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

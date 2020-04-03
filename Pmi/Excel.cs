@@ -7,20 +7,33 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Pmi.Model;
+using Pmi.Builders;
+using Pmi.Directors;
+using Pmi.Service.Implimentation;
+using System.Configuration;
+using Pmi.Service.Abstraction;
 
 namespace Pmi
-{
+{                          
     class Excel
-    {
-        class DataCell
+    {                       
+        #region shit
+        class CellData
         {
             public string Column;
             public uint Row;
             public string Data;
         }
 
-        static private string[] Column = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q" };
-        private static Cell InsertCellInWorksheet(string columnName, uint rowIndex, WorksheetPart worksheetPart)
+        CacheService<List<ExcelCellFormat>> cacheService;
+
+        public Excel(CacheService<List<ExcelCellFormat>> cacheService)
+        {
+            this.cacheService = cacheService;
+        }
+
+        private string[] Column = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q" };
+        private Cell InsertCellInWorksheet(string columnName, uint rowIndex, WorksheetPart worksheetPart)
         {
             Worksheet worksheet = worksheetPart.Worksheet;
             SheetData sheetData = worksheet.GetFirstChild<SheetData>();
@@ -61,7 +74,7 @@ namespace Pmi
             }
         }
 
-        private static int InsertSharedStringItem(string text, SharedStringTablePart shareStringPart)
+        private int InsertSharedStringItem(string text, SharedStringTablePart shareStringPart)
         {
             if (shareStringPart.SharedStringTable == null)
             {
@@ -86,21 +99,21 @@ namespace Pmi
             return i;
         }
 
-        private static Sheet GetSheet(WorkbookPart workbookPart, string nameSheet)
+        private WorksheetPart GetSheet(WorkbookPart workbookPart, string nameSheet)
         {
             Sheets sheets = workbookPart.Workbook.GetFirstChild<Sheets>();
-
+            int count = 0;
             foreach (var ItemSheets in sheets.Elements<Sheet>())
             {
-                if (ItemSheets.Name == nameSheet)
+                if (ItemSheets.Name.Value.Contains(nameSheet))
                 {
-                    return ItemSheets;
+                    count++;
                 }
             }
 
             WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
             worksheetPart.Worksheet = new Worksheet(new SheetData());
-            
+
             string relationshipId = workbookPart.GetIdOfPart(worksheetPart);
 
             uint sheetId = 1;
@@ -108,12 +121,12 @@ namespace Pmi
             {
                 sheetId = sheets.Elements<Sheet>().Select(s => s.SheetId.Value).Max() + 1;
             }
-            Sheet sheet = new Sheet() { Id = relationshipId, SheetId = sheetId, Name = nameSheet };
+            Sheet sheet = new Sheet() { Id = relationshipId, SheetId = sheetId, Name = nameSheet + " " + count.ToString() };
             sheets.Append(sheet);
-            return sheet;
+            return worksheetPart;
         }
 
-        public static string GetCellValue(Worksheet worksheet, WorkbookPart workbookPart, string nameCell)
+        public string GetCellValue(Worksheet worksheet, WorkbookPart workbookPart, string nameCell)
         {
             string value = "0";
             Cell theCell = worksheet.Descendants<Cell>().Where(c => c.CellReference == nameCell).FirstOrDefault();
@@ -148,7 +161,7 @@ namespace Pmi
             return value;
         }
 
-        private static double GetHour(string data, string name)
+        private double GetHour(string data, string name)
         {
             int start = data.IndexOf(name);
             int lenght = 0;
@@ -164,7 +177,7 @@ namespace Pmi
             return double.Parse(data.Substring(start, lenght));
         }
 
-        public static Employee GetEmployee(string path, string lastName, string name, string patronymic, string rank)
+        public Employee GetEmployee(string path, string lastName, string name, string patronymic, string rank)
         {
             using (SpreadsheetDocument doc = SpreadsheetDocument.Open(path, true))
             {
@@ -413,8 +426,97 @@ namespace Pmi
                 return employee;
             }
         }
+        #endregion
 
-        public static void CreateRaport(Employee employee, WorksheetPart worksheetPart, SharedStringTablePart shareStringPart)
+        public void CreateRaportInFile(string path, Employee employee)
+        {
+            using (SpreadsheetDocument doc = SpreadsheetDocument.Open(path, true))
+            {
+                SharedStringTablePart shareStringPart;
+                if (doc.WorkbookPart.GetPartsOfType<SharedStringTablePart>().Count() > 0)
+                {
+                    shareStringPart = doc.WorkbookPart.GetPartsOfType<SharedStringTablePart>().First();
+                }
+                else
+                {
+                    shareStringPart = doc.WorkbookPart.AddNewPart<SharedStringTablePart>();
+                }
+                var worksheetPart = GetSheet(doc.WorkbookPart, employee.LastName + " " + employee.FirstName[0] + "." + employee.Patronymic[0] + ".");
+                CreateRaport(employee, worksheetPart, shareStringPart);
+                doc.WorkbookPart.Workbook.Save();
+            }
+        }
+
+
+        /// <summary>
+        /// Добавляет стили к документу
+        /// </summary>
+        /// <param name="document"></param>
+        /// <param name="stylesheet"></param>
+        private void AppendStylesToDocument(SpreadsheetDocument document, ExcelStylesheet stylesheet)
+        {
+            var documentStylesheet = document.WorkbookPart.WorkbookStylesPart.Stylesheet;
+            foreach (var font in stylesheet.Fonts)
+                documentStylesheet.Fonts.AppendChild(font.CloneNode(true));
+            foreach (var fill in stylesheet.Fills)
+                documentStylesheet.Fills.AppendChild(fill.CloneNode(true));
+            foreach (var border in stylesheet.Borders)
+                documentStylesheet.Borders.AppendChild(border.CloneNode(true));            
+            foreach (var cellFormat in stylesheet.CellFormats)
+                documentStylesheet.CellFormats.AppendChild((CellFormat)cellFormat);
+            document.Save();
+        }
+
+        /// <summary>
+        /// Инициализирует необходимые стили и заносит информацию о них в кэш
+        /// </summary>
+        /// <param name="document"></param>
+        private void InitStyles(SpreadsheetDocument document)
+        {
+            var workbookpart = document.WorkbookPart;
+            var workStylePart = workbookpart.WorkbookStylesPart;
+            var styleSheet = workStylePart.Stylesheet;
+
+            // вынести в отдельный метод?
+            #region генерация стилей для страниц
+            ExcelStylesheetBuilder builder = new ExcelStylesheetBuilder((uint)styleSheet.Fonts.ChildElements.Count,
+                (uint)styleSheet.CellFormats.ChildElements.Count);
+            ExcelStylesheetDirector director = new ExcelStylesheetDirector() { StylesheetBuilder = builder };
+
+            director.BuildReportStylesheet();
+            var reportStylesheet = builder.GetStylesheet();
+            #endregion            
+
+            AppendStylesToDocument(document, reportStylesheet);
+            cacheService.Cache(reportStylesheet.CellFormats);            
+        }
+
+        /// <summary>
+        /// Сравнивает два формата ячейки на идентичность по полям
+        /// </summary>
+        /// <param name="first"></param>
+        /// <param name="second"></param>
+        /// <returns></returns>
+        public bool AreCellFormatEquals(CellFormat first, ExcelCellFormat second)
+        {
+            return first.FontId == second.FontId && first.Alignment.Horizontal.Value == second.HorizontalAlignment
+                && first.Alignment.Vertical.Value == second.VerticalAlignment && first.BorderId == second.BorderId && first.FillId == second.FillId;
+        }
+
+        /// <summary>
+        /// Проверяет, совпадают ли индексы стилей в документе с индексами стилей в кэше. Сравнивает только первые и последние форматы ячеек.
+        /// </summary>
+        /// <param name="document"></param>
+        /// <param name="stylesheet"></param>
+        public bool AreIndexesSame(SpreadsheetDocument document)
+        {
+            var excelCellFormats =  cacheService.UploadCache();
+            int firstId = Convert.ToInt32(excelCellFormats.First().Id);
+            int lastId = Convert.ToInt32(excelCellFormats.Last().Id);
+            return AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[firstId] as CellFormat, excelCellFormats.First())
+                && AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[lastId] as CellFormat, excelCellFormats.Last());
+        }
+        public void CreateRaport(Employee employee, WorksheetPart worksheetPart, SharedStringTablePart shareStringPart)
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
             #region CreateCloumn
@@ -506,36 +608,36 @@ namespace Pmi
             }
             #endregion
             #region CreateRow
-            DataCell[] cells =
+            CellData[] cells =
             {
-                new DataCell(){Column = "A", Row = 1, Data = "федеральное государственное бюджетное образовательное учреждение высшего образования "},
-                new DataCell(){Column = "A", Row = 2, Data = "«Казанский национальный исследовательский технический университет им. А.Н. Туполева-КАИ» (КНИТУ-КАИ)"},
-                new DataCell(){Column = "M", Row = 4, Data = "УТВЕРЖДАЮ"},
-                new DataCell(){Column = "D", Row = 5, Data = "ПЛАН УЧЕБНОЙ НАГРУЗКИ"},
-                new DataCell(){Column = "M", Row = 5, Data = "Зав. кафедрой ПМИ"},
-                new DataCell(){Column = "M", Row = 6, Data = "Зайдуллин С.С."},
-                new DataCell(){Column = "O", Row = 7, Data = "подпись, ФИО"},
-                new DataCell(){Column = "C", Row = 7, Data = $"{employee.Rank}, {employee.FirstName} {employee.LastName} {employee.Patronymic}"},
-                new DataCell(){Column = "C", Row = 8, Data = "должность, ФИО, ученая степень, ученое звание, доля ставки, штатность"},
-
-                new DataCell(){Column = "A", Row = 11, Data = "Код ОП,\nиндекс дисциплины,\nнаименование дисциплины"},
-                new DataCell(){Column = "C", Row = 11, Data = "Группа"},
-                new DataCell(){Column = "D", Row = 11, Data = "Лекц"},
-                new DataCell(){Column = "E", Row = 11, Data = "Практ"},
-                new DataCell(){Column = "F", Row = 11, Data = "Лаб"},
-                new DataCell(){Column = "G", Row = 11, Data = "Консульт. студ."},
-                new DataCell(){Column = "I", Row = 11, Data = "Руководство"},
-                new DataCell(){Column = "M", Row = 11, Data = "ГЭК"},
-                new DataCell(){Column = "N", Row = 11, Data = "ЗАЧ"},
-                new DataCell(){Column = "O", Row = 11, Data = "ЭКЗ"},
-                new DataCell(){Column = "P", Row = 11, Data = "Другие  виды уч. работы"},
-                new DataCell(){Column = "Q", Row = 11, Data = " ВСЕГО"},
-                new DataCell(){Column = "G", Row = 12, Data = "по теор. курсу"},
-                new DataCell(){Column = "H", Row = 12, Data = "по дипл. проект."},
-                new DataCell(){Column = "I", Row = 12, Data = "асп-ми"},
-                new DataCell(){Column = "J", Row = 12, Data = "курс. проект. (раб.)"},
-                new DataCell(){Column = "K", Row = 12, Data = "дипл. проект."},
-                new DataCell(){Column = "L", Row = 12, Data = "практ."},
+                new CellData(){Column = "A", Row = 1, Data = "федеральное государственное бюджетное образовательное учреждение высшего образования "},
+                new CellData(){Column = "A", Row = 2, Data = "«Казанский национальный исследовательский технический университет им. А.Н. Туполева-КАИ» (КНИТУ-КАИ)"},
+                new CellData(){Column = "M", Row = 4, Data = "УТВЕРЖДАЮ"},
+                new CellData(){Column = "D", Row = 5, Data = "ПЛАН УЧЕБНОЙ НАГРУЗКИ"},
+                new CellData(){Column = "M", Row = 5, Data = "Зав. кафедрой ПМИ"},
+                new CellData(){Column = "M", Row = 6, Data = "Зайдуллин С.С."},
+                new CellData(){Column = "O", Row = 7, Data = "подпись, ФИО"},
+                new CellData(){Column = "C", Row = 7, Data = $"{employee.Rank}, {employee.FirstName} {employee.LastName} {employee.Patronymic}"},
+                new CellData(){Column = "C", Row = 8, Data = "должность, ФИО, ученая степень, ученое звание, доля ставки, штатность"},
+                
+                new CellData(){Column = "A", Row = 11, Data = "Код ОП,\nиндекс дисциплины,\nнаименование дисциплины"},
+                new CellData(){Column = "C", Row = 11, Data = "Группа"},
+                new CellData(){Column = "D", Row = 11, Data = "Лекц"},
+                new CellData(){Column = "E", Row = 11, Data = "Практ"},
+                new CellData(){Column = "F", Row = 11, Data = "Лаб"},
+                new CellData(){Column = "G", Row = 11, Data = "Консульт. студ."},
+                new CellData(){Column = "I", Row = 11, Data = "Руководство"},
+                new CellData(){Column = "M", Row = 11, Data = "ГЭК"},
+                new CellData(){Column = "N", Row = 11, Data = "ЗАЧ"},
+                new CellData(){Column = "O", Row = 11, Data = "ЭКЗ"},
+                new CellData(){Column = "P", Row = 11, Data = "Другие  виды уч. работы"},
+                new CellData(){Column = "Q", Row = 11, Data = " ВСЕГО"},
+                new CellData(){Column = "G", Row = 12, Data = "по теор. курсу"},
+                new CellData(){Column = "H", Row = 12, Data = "по дипл. проект."},
+                new CellData(){Column = "I", Row = 12, Data = "асп-ми"},
+                new CellData(){Column = "J", Row = 12, Data = "курс. проект. (раб.)"},
+                new CellData(){Column = "K", Row = 12, Data = "дипл. проект."},
+                new CellData(){Column = "L", Row = 12, Data = "практ."},
             };
             foreach (var data in cells)
             {
@@ -623,22 +725,22 @@ namespace Pmi
             semCell = InsertCellInWorksheet("A", row, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("Итого за осенний семестр", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
-            DataCell[] totalS =
+            CellData[] totalS =
             {
-                new DataCell(){Column = "D", Row = row, Data = employee.SpringSemester.TotalForLectures().ToString()},
-                new DataCell(){Column = "E", Row = row, Data = employee.SpringSemester.TotalForPracticalWork().ToString()},
-                new DataCell(){Column = "F", Row = row, Data = employee.SpringSemester.TotalForLaboratoryWork().ToString()},
-                new DataCell(){Column = "G", Row = row, Data = employee.SpringSemester.TotalForConsultationsByTheory().ToString()},
-                new DataCell(){Column = "H", Row = row, Data = employee.SpringSemester.TotalForConsultationsByDiplom().ToString()},
-                new DataCell(){Column = "I", Row = row, Data = employee.SpringSemester.TotalForAspirants().ToString()},
-                new DataCell(){Column = "J", Row = row, Data = employee.SpringSemester.TotalForCoursework().ToString()},
-                new DataCell(){Column = "K", Row = row, Data = employee.SpringSemester.TotalForDiploms().ToString()},
-                new DataCell(){Column = "L", Row = row, Data = employee.SpringSemester.TotalForPractice().ToString()},
-                new DataCell(){Column = "M", Row = row, Data = employee.SpringSemester.TotalForGEK().ToString()},
-                new DataCell(){Column = "N", Row = row, Data = employee.SpringSemester.TotalForTests().ToString()},
-                new DataCell(){Column = "O", Row = row, Data = employee.SpringSemester.TotalForExam().ToString()},
-                new DataCell(){Column = "P", Row = row, Data = employee.SpringSemester.TotalForAnotherWork().ToString()},
-                new DataCell(){Column = "Q", Row = row, Data = employee.SpringSemester.TotalForSemester().ToString()}
+                new CellData(){Column = "D", Row = row, Data = employee.SpringSemester.TotalForLectures().ToString()},
+                new CellData(){Column = "E", Row = row, Data = employee.SpringSemester.TotalForPracticalWork().ToString()},
+                new CellData(){Column = "F", Row = row, Data = employee.SpringSemester.TotalForLaboratoryWork().ToString()},
+                new CellData(){Column = "G", Row = row, Data = employee.SpringSemester.TotalForConsultationsByTheory().ToString()},
+                new CellData(){Column = "H", Row = row, Data = employee.SpringSemester.TotalForConsultationsByDiplom().ToString()},
+                new CellData(){Column = "I", Row = row, Data = employee.SpringSemester.TotalForAspirants().ToString()},
+                new CellData(){Column = "J", Row = row, Data = employee.SpringSemester.TotalForCoursework().ToString()},
+                new CellData(){Column = "K", Row = row, Data = employee.SpringSemester.TotalForDiploms().ToString()},
+                new CellData(){Column = "L", Row = row, Data = employee.SpringSemester.TotalForPractice().ToString()},
+                new CellData(){Column = "M", Row = row, Data = employee.SpringSemester.TotalForGEK().ToString()},
+                new CellData(){Column = "N", Row = row, Data = employee.SpringSemester.TotalForTests().ToString()},
+                new CellData(){Column = "O", Row = row, Data = employee.SpringSemester.TotalForExam().ToString()},
+                new CellData(){Column = "P", Row = row, Data = employee.SpringSemester.TotalForAnotherWork().ToString()},
+                new CellData(){Column = "Q", Row = row, Data = employee.SpringSemester.TotalForSemester().ToString()}
             };
             foreach (var data in totalS)
             {
@@ -716,22 +818,22 @@ namespace Pmi
             semCell = InsertCellInWorksheet("A", row, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("Итого за весенний семестр", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
-            DataCell[] totalA =
+            CellData[] totalA =
             {
-                new DataCell(){Column = "D", Row = row, Data = employee.AutumnSemester.TotalForLectures().ToString()},
-                new DataCell(){Column = "E", Row = row, Data = employee.AutumnSemester.TotalForPracticalWork().ToString()},
-                new DataCell(){Column = "F", Row = row, Data = employee.AutumnSemester.TotalForLaboratoryWork().ToString()},
-                new DataCell(){Column = "G", Row = row, Data = employee.AutumnSemester.TotalForConsultationsByTheory().ToString()},
-                new DataCell(){Column = "H", Row = row, Data = employee.AutumnSemester.TotalForConsultationsByDiplom().ToString()},
-                new DataCell(){Column = "I", Row = row, Data = employee.AutumnSemester.TotalForAspirants().ToString()},
-                new DataCell(){Column = "J", Row = row, Data = employee.AutumnSemester.TotalForCoursework().ToString()},
-                new DataCell(){Column = "K", Row = row, Data = employee.AutumnSemester.TotalForDiploms().ToString()},
-                new DataCell(){Column = "L", Row = row, Data = employee.AutumnSemester.TotalForPractice().ToString()},
-                new DataCell(){Column = "M", Row = row, Data = employee.AutumnSemester.TotalForGEK().ToString()},
-                new DataCell(){Column = "N", Row = row, Data = employee.AutumnSemester.TotalForTests().ToString()},
-                new DataCell(){Column = "O", Row = row, Data = employee.AutumnSemester.TotalForExam().ToString()},
-                new DataCell(){Column = "P", Row = row, Data = employee.AutumnSemester.TotalForAnotherWork().ToString()},
-                new DataCell(){Column = "Q", Row = row, Data = employee.AutumnSemester.TotalForSemester().ToString()}
+                new CellData(){Column = "D", Row = row, Data = employee.AutumnSemester.TotalForLectures().ToString()},
+                new CellData(){Column = "E", Row = row, Data = employee.AutumnSemester.TotalForPracticalWork().ToString()},
+                new CellData(){Column = "F", Row = row, Data = employee.AutumnSemester.TotalForLaboratoryWork().ToString()},
+                new CellData(){Column = "G", Row = row, Data = employee.AutumnSemester.TotalForConsultationsByTheory().ToString()},
+                new CellData(){Column = "H", Row = row, Data = employee.AutumnSemester.TotalForConsultationsByDiplom().ToString()},
+                new CellData(){Column = "I", Row = row, Data = employee.AutumnSemester.TotalForAspirants().ToString()},
+                new CellData(){Column = "J", Row = row, Data = employee.AutumnSemester.TotalForCoursework().ToString()},
+                new CellData(){Column = "K", Row = row, Data = employee.AutumnSemester.TotalForDiploms().ToString()},
+                new CellData(){Column = "L", Row = row, Data = employee.AutumnSemester.TotalForPractice().ToString()},
+                new CellData(){Column = "M", Row = row, Data = employee.AutumnSemester.TotalForGEK().ToString()},
+                new CellData(){Column = "N", Row = row, Data = employee.AutumnSemester.TotalForTests().ToString()},
+                new CellData(){Column = "O", Row = row, Data = employee.AutumnSemester.TotalForExam().ToString()},
+                new CellData(){Column = "P", Row = row, Data = employee.AutumnSemester.TotalForAnotherWork().ToString()},
+                new CellData(){Column = "Q", Row = row, Data = employee.AutumnSemester.TotalForSemester().ToString()}
             };
             foreach (var data in totalA)
             {
@@ -749,22 +851,22 @@ namespace Pmi
             semCell = InsertCellInWorksheet("A", row, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("ВСЕГО ЗА ГОД", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
-            DataCell[] total =
+            CellData[] total =
             {
-                new DataCell(){Column = "D", Row = row, Data = employee.LecturesForYear().ToString()},
-                new DataCell(){Column = "E", Row = row, Data = employee.PracticalWorkForYear().ToString()},
-                new DataCell(){Column = "F", Row = row, Data = employee.LaboratoryWorkForYear().ToString()},
-                new DataCell(){Column = "G", Row = row, Data = employee.ConsultationsByTheoryForYear().ToString()},
-                new DataCell(){Column = "H", Row = row, Data = employee.ConsultationsByDiplomForYear().ToString()},
-                new DataCell(){Column = "I", Row = row, Data = employee.AspirantsForYear().ToString()},
-                new DataCell(){Column = "J", Row = row, Data = employee.CourseworkForYear().ToString()},
-                new DataCell(){Column = "K", Row = row, Data = employee.DiplomsForYear().ToString()},
-                new DataCell(){Column = "L", Row = row, Data = employee.PracticeForYear().ToString()},
-                new DataCell(){Column = "M", Row = row, Data = employee.GakForYear().ToString()},
-                new DataCell(){Column = "N", Row = row, Data = employee.TestsForYear().ToString()},
-                new DataCell(){Column = "O", Row = row, Data = employee.ExamForYear().ToString()},
-                new DataCell(){Column = "P", Row = row, Data = employee.AnotherWorkForYear().ToString()},
-                new DataCell(){Column = "Q", Row = row, Data = employee.Year().ToString()}
+                new CellData(){Column = "D", Row = row, Data = employee.LecturesForYear().ToString()},
+                new CellData(){Column = "E", Row = row, Data = employee.PracticalWorkForYear().ToString()},
+                new CellData(){Column = "F", Row = row, Data = employee.LaboratoryWorkForYear().ToString()},
+                new CellData(){Column = "G", Row = row, Data = employee.ConsultationsByTheoryForYear().ToString()},
+                new CellData(){Column = "H", Row = row, Data = employee.ConsultationsByDiplomForYear().ToString()},
+                new CellData(){Column = "I", Row = row, Data = employee.AspirantsForYear().ToString()},
+                new CellData(){Column = "J", Row = row, Data = employee.CourseworkForYear().ToString()},
+                new CellData(){Column = "K", Row = row, Data = employee.DiplomsForYear().ToString()},
+                new CellData(){Column = "L", Row = row, Data = employee.PracticeForYear().ToString()},
+                new CellData(){Column = "M", Row = row, Data = employee.GakForYear().ToString()},
+                new CellData(){Column = "N", Row = row, Data = employee.TestsForYear().ToString()},
+                new CellData(){Column = "O", Row = row, Data = employee.ExamForYear().ToString()},
+                new CellData(){Column = "P", Row = row, Data = employee.AnotherWorkForYear().ToString()},
+                new CellData(){Column = "Q", Row = row, Data = employee.Year().ToString()}
             };
             foreach (var data in total)
             {
@@ -785,8 +887,7 @@ namespace Pmi
             semCell.CellValue = new CellValue(InsertSharedStringItem("подпись преподавателя", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
         }
-
-        public static void CreateRaportSeparate(string path, Employee employee)
+        public void CreateRaportSeparate(string path, Employee employee)
         {
             SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Create(path, SpreadsheetDocumentType.Workbook);
             WorkbookPart workbookpart = spreadsheetDocument.AddWorkbookPart();
@@ -814,28 +915,6 @@ namespace Pmi
             CreateRaport(employee, worksheetPart, shareStringPart);
             workbookpart.Workbook.Save();
             spreadsheetDocument.Close();
-        }
-
-        public static void CreateRaportInFile(string path, Employee employee)
-        {
-            using (SpreadsheetDocument doc = SpreadsheetDocument.Open(path, true))
-            {
-                SharedStringTablePart shareStringPart;
-                if (doc.WorkbookPart.GetPartsOfType<SharedStringTablePart>().Count() > 0)
-                {
-                    shareStringPart = doc.WorkbookPart.GetPartsOfType<SharedStringTablePart>().First();
-                }
-                else
-                {
-                    shareStringPart = doc.WorkbookPart.AddNewPart<SharedStringTablePart>();
-                }
-                var sheet = GetSheet(doc.WorkbookPart, employee.LastName+ " " + employee.FirstName[0] + "." + employee.Patronymic[0] + ".(A4)");
-                var worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(sheet.Id));
-                //CreateRaport(employee, worksheetPart, shareStringPart);
-                //sheet.Remove();
-                //doc.WorkbookPart.DeletePart(worksheetPart);
-                doc.WorkbookPart.Workbook.Save();
-            }
         }
     }
 }
