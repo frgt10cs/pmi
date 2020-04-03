@@ -29,8 +29,8 @@ namespace Pmi
         {
             InitializeComponent();
             Excel excel = new Excel(new JsonCacheService<List<ExcelCellFormat>>(ConfigurationManager.AppSettings.Get("stylesheetInfoCache")));
-            excel.CreateRaportInFile("Test.xlsx", null);
-            DataContext = new MainViewModel(new XmlCacheService<List<EmployeeViewModel>>(ConfigurationManager.AppSettings.Get("teachersCache")));                        
+            //excel.CreateRaportInFile("Test.xlsx", null);
+            DataContext = new MainViewModel(new JsonCacheService<List<EmployeeViewModel>>(ConfigurationManager.AppSettings.Get("teachersCache")));
         }
     }
 }
