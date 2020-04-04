@@ -11,18 +11,17 @@ namespace Pmi.ViewModel
     class LoadingViewModel : BaseViewModel
     {
         public event EventHandler OnRequestClose;
+        public Excel ExcelObj { get; set; }
 
-        public LoadingViewModel()
+        public LoadingViewModel(Excel excel)
         {
-            var worker = new BackgroundWorker();
-            worker.DoWork += DoWork;
-            worker.ProgressChanged += ProgressChanged;
-            worker.WorkerReportsProgress = true;
-            worker.RunWorkerAsync();
+            ExcelObj = excel;
+            ExcelObj.OnProgressChanged += (s, e) => OnPropertyChanged("Status");
+            ExcelObj.OnProgressChanged += (s, e) => OnPropertyChanged("Progress");
         }
 
-        private int progress;
-        public int Progress
+        private uint progress;
+        public uint Progress
         {
             get { return progress; }
             set
@@ -41,23 +40,12 @@ namespace Pmi.ViewModel
             set { if (status != value) { status = value; OnPropertyChanged("Status"); } }
         }
         
-        private void DoWork(object sender, DoWorkEventArgs e)
+        public async void DoWork()
         {
-            var worker = (BackgroundWorker)sender;
-            for (int i = 0; i < 30; i++)
-            {
-                Progress += i;
-                Thread.Sleep(100);
-                
-            }
-            worker.ReportProgress(-1);
-        }
-        private void ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            if (e.ProgressPercentage == -1)
-            {
-                OnRequestClose(this, new EventArgs());
-            }
+            Status = "";
+            Progress = 0;
+            await Task.Run(() => ExcelObj.ForTest(ref status, ref progress));
+            OnRequestClose(this, new EventArgs());
         }
     }
 }

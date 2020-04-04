@@ -24,6 +24,9 @@ namespace Pmi.ViewModel
         public string SelectedMode { get { return selectedMode; } set { selectedMode = value; OnPropertyChanged("SelectedMode"); } }
         private RelayCommand createReport;
         public RelayCommand CreateReport { get { return createReport; } }
+        private LoadingViewModel loading;
+        private LoadingWindow loadingWindow;
+        public LoadingWindow LoadingWindow { get; }
 
         public bool AreYear()
         {
@@ -31,7 +34,7 @@ namespace Pmi.ViewModel
             return regex.Match(year).Success;
         }
 
-        public MainViewModel(CacheService<List<EmployeeViewModel>> cacheServ)
+        public MainViewModel(CacheService<List<EmployeeViewModel>> cacheServ, Excel excel)
         {
             var cache = cacheServ.UploadCache();        
             if(cache==null)
@@ -46,6 +49,12 @@ namespace Pmi.ViewModel
                 }
             }            
 
+            loading = new LoadingViewModel(excel);
+            loadingWindow = new LoadingWindow();
+            loadingWindow.DataContext = loading;
+            loading.OnRequestClose += (s, e) => loadingWindow.Hide();
+            loadingWindow.Activated += (s, e) => loading.DoWork();
+
             ReportModes = new ObservableCollection<string>()
             {
                 "fast",
@@ -55,11 +64,7 @@ namespace Pmi.ViewModel
 
             createReport = new RelayCommand(obj =>
             {
-                var LoadVM = new LoadingViewModel();
-                var Load = new LoadingWindow();
-                Load.DataContext = LoadVM;
-                LoadVM.OnRequestClose += (s, e) => Load.Close();
-                Load.ShowDialog();
+                loadingWindow.ShowDialog();
             },
             _obj => selectedEmployee != null && selectedMode != null );
         }                   

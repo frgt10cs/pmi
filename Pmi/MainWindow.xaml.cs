@@ -28,9 +28,20 @@ namespace Pmi
         public MainWindow()
         {
             InitializeComponent();
-            Excel excel = new Excel(new JsonCacheService<List<ExcelCellFormat>>(ConfigurationManager.AppSettings.Get("stylesheetInfoCache")));
-            //excel.CreateRaportInFile("Test.xlsx", null);
-            DataContext = new MainViewModel(new JsonCacheService<List<EmployeeViewModel>>(ConfigurationManager.AppSettings.Get("teachersCache")));
+            DataContext = new MainViewModel(new JsonCacheService<List<EmployeeViewModel>>(ConfigurationManager.AppSettings.Get("teachersCache"))
+                , new Excel(new JsonCacheService<List<ExcelCellFormat>>(ConfigurationManager.AppSettings.Get("stylesheetInfoCache"))));
+            Closing += (s, e) => ClosingWin();
+        }
+
+        void ClosingWin()
+        {
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window is LoadingWindow)
+                {
+                    window.Close();
+                }
+            }
         }
     }
 }

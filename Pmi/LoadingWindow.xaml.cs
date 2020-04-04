@@ -23,22 +23,6 @@ namespace Pmi
         public LoadingWindow()
         {
             InitializeComponent();
-            Closed += (o, args) => BindableDialogResult = DialogResult;
-            SetBinding(BindableDialogResultProperty, new Binding("Answer"));
         }
-        void OnYes(object sender, RoutedEventArgs e)
-        {
-            DialogResult = true;
-        }
-        
-        public bool? BindableDialogResult
-        {
-            get { return (bool?)GetValue(BindableDialogResultProperty); }
-            set { SetValue(BindableDialogResultProperty, value); }
-        }
-
-        public static readonly DependencyProperty BindableDialogResultProperty =
-            DependencyProperty.Register("BindableDialogResult", typeof(bool?), typeof(LoadingWindow),
-                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
     }
 }

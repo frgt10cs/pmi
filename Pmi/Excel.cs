@@ -12,11 +12,13 @@ using Pmi.Directors;
 using Pmi.Service.Implimentation;
 using System.Configuration;
 using Pmi.Service.Abstraction;
+using System.Threading;
 
 namespace Pmi
 {                          
     class Excel
-    {                       
+    {
+        public event EventHandler OnProgressChanged;
         #region shit
         class CellData
         {
@@ -1011,5 +1013,16 @@ namespace Pmi
             }
         }
 
+        public void ForTest(ref string status, ref uint progress)
+        {
+            status = "";
+            for (int i = 0; i < 15; i++)
+            {
+                Thread.Sleep(500);
+                status = i.ToString();
+                progress += 1;
+                OnProgressChanged(this, new EventArgs());
+            }
+        }
     }
 }
