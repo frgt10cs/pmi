@@ -19,6 +19,7 @@ namespace Pmi.Model
         public uint FillId { get; set; }
         public HorizontalAlignmentValues HorizontalAlignment { get; set; }
         public VerticalAlignmentValues VerticalAlignment { get; set; }
+        public bool Wrap { get; set; } = false;
 
         public static implicit operator CellFormat(ExcelCellFormat excelCellFormat)
         {
@@ -30,7 +31,8 @@ namespace Pmi.Model
                 Alignment = new Alignment()
                 {
                     Vertical = excelCellFormat.VerticalAlignment,
-                    Horizontal = excelCellFormat.HorizontalAlignment
+                    Horizontal = excelCellFormat.HorizontalAlignment,
+                    WrapText = excelCellFormat.Wrap
                 }
             };
         }
