@@ -94,11 +94,7 @@ namespace Pmi.Directors
         {
             fontBuilder.SetFontSize(14);
         }
-        public void BuildDepatment()
-        {
-            fontBuilder.SetFontSize(14);
-            fontBuilder.AddUnderline(DocumentFormat.OpenXml.Spreadsheet.UnderlineValues.Single);
-        }
+       
         public void BuildManagerInfo()
         {
             fontBuilder.SetFontSize(12);
