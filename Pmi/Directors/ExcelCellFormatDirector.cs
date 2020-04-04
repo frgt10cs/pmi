@@ -58,13 +58,15 @@ namespace Pmi.Directors
             builder.SetFontId(fontId);
             builder.SetHorizontalAlignment(HorizontalAlignmentValues.Center);
             builder.SetVerticalAlignment(VerticalAlignmentValues.Center);
+            builder.SetWrapText(true);
         }
 
         public void BuildTotalCellFormat(uint fontId = 0)
         {
             builder.SetFontId(fontId);
             builder.SetHorizontalAlignment(HorizontalAlignmentValues.Center);
-            builder.SetVerticalAlignment(VerticalAlignmentValues.Bottom);
+            builder.SetVerticalAlignment(VerticalAlignmentValues.Center);
+            builder.SetWrapText(true);
         }
 
         public void BuildColumnNumberCellFormat(uint fontId = 0)
@@ -79,6 +81,7 @@ namespace Pmi.Directors
             builder.SetFontId(fontId);
             builder.SetHorizontalAlignment(HorizontalAlignmentValues.Center);
             builder.SetVerticalAlignment(VerticalAlignmentValues.Center);
+            builder.SetWrapText(true);
         }
 
         public void BuildDisciplineNameCellFormat(uint fontId = 0)
@@ -86,6 +89,7 @@ namespace Pmi.Directors
             builder.SetFontId(fontId);
             builder.SetHorizontalAlignment(HorizontalAlignmentValues.Left);
             builder.SetVerticalAlignment(VerticalAlignmentValues.Center);
+            builder.SetWrapText(true);
         }
 
         public void BuildSemesterNameCellFormat(uint fontId = 0)
@@ -100,6 +104,7 @@ namespace Pmi.Directors
             builder.SetFontId(fontId);
             builder.SetHorizontalAlignment(HorizontalAlignmentValues.Center);
             builder.SetVerticalAlignment(VerticalAlignmentValues.Center);
+            builder.SetWrapText(true);
         }
 
         public void BuildSemesterTotalLableCellFormat(uint fontId = 0)
@@ -112,7 +117,7 @@ namespace Pmi.Directors
         public void BuildColumnTotalCellFormat(uint fontId = 0)
         {
             builder.SetFontId(fontId);
-            builder.SetHorizontalAlignment(HorizontalAlignmentValues.Left);
+            builder.SetHorizontalAlignment(HorizontalAlignmentValues.Center);
             builder.SetVerticalAlignment(VerticalAlignmentValues.Bottom);
         }
 
@@ -131,13 +136,6 @@ namespace Pmi.Directors
         }
 
         public void BuildPositionCellFormat(uint fontId = 0)
-        {
-            builder.SetFontId(fontId);
-            builder.SetHorizontalAlignment(HorizontalAlignmentValues.Left);
-            builder.SetVerticalAlignment(VerticalAlignmentValues.Bottom);
-        }
-
-        public void BuildDepartmentCellFormat(uint fontId = 0)
         {
             builder.SetFontId(fontId);
             builder.SetHorizontalAlignment(HorizontalAlignmentValues.Left);
