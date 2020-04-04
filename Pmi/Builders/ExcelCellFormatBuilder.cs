@@ -70,6 +70,15 @@ namespace Pmi.Builders
         }
 
         /// <summary>
+        /// Устанавливает перенос строки
+        /// </summary>
+        /// <param name="type"></param>
+        public void SetWrapText(bool wrap)
+        {
+            cellFormat.Wrap = wrap;
+        }
+
+        /// <summary>
         /// Возвращает построенный формат ячейки
         /// </summary>
         /// <returns></returns>
