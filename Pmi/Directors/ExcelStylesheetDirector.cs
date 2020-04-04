@@ -12,22 +12,21 @@ public enum ExcelCellFormats
     Title = 1,
     Approve = 2,
     Position = 3,
-    Depatment = 4,
-    ManagerInfo = 5,
-    ManagerInfoMeta = 6,
-    Total = 7,
-    ColumnName = 8,
-    DisciplineCode = 9,
-    DisciplineName = 10,
-    SemesterName = 11,
-    GroupPlan = 12,
-    ColumnTotal = 13,
-    SemesterTotalLabel = 14,
-    TeacherSignature = 15,
-    Year = 16,
-    EmployeeInfoMeta = 17,
-    EmployeeInfo = 18,
-    ColumnNumber = 19
+    ManagerInfo = 4,
+    ManagerInfoMeta = 5,
+    Total = 6,
+    ColumnName = 7,
+    DisciplineCode = 8,
+    DisciplineName = 9,
+    SemesterName = 10,
+    GroupPlan = 11,
+    ColumnTotal = 12,
+    SemesterTotalLabel = 13,
+    TeacherSignature = 14,
+    Year = 15,
+    EmployeeInfoMeta = 16,
+    EmployeeInfo = 17,
+    ColumnNumber = 18
 }
 
 namespace Pmi.Directors
@@ -67,10 +66,6 @@ namespace Pmi.Directors
             fontDirector.BuildPosition();
             cellFormatDirector.BuildPositionCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.Position, cellFormatBuilder.GetCellFormat());
-
-            fontDirector.BuildDepatment();
-            cellFormatDirector.BuildDepartmentCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()));
-            stylesheetBuilder.AddCellFormat(ExcelCellFormats.Depatment, cellFormatBuilder.GetCellFormat());
 
             fontDirector.BuildManagerInfo();
             cellFormatDirector.BuildManagerInfoCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()));
