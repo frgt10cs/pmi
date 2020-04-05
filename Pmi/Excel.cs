@@ -12,12 +12,15 @@ using Pmi.Directors;
 using Pmi.Service.Implimentation;
 using System.Configuration;
 using Pmi.Service.Abstraction;
+using System.Threading;
 
 namespace Pmi
 {                          
     class Excel
-    {                       
-        #region shit
+    {
+        public event EventHandler OnProgressChanged;
+        public event EventHandler OnStatusChanged;
+
         class CellData
         {
             public string Column;
@@ -128,7 +131,7 @@ namespace Pmi
             return worksheetPart;
         }
 
-        public string GetCellValue(Worksheet worksheet, WorkbookPart workbookPart, string nameCell)
+        private string GetCellValue(Worksheet worksheet, WorkbookPart workbookPart, string nameCell)
         {
             string value = "0";
             Cell theCell = worksheet.Descendants<Cell>().Where(c => c.CellReference == nameCell).FirstOrDefault();
@@ -179,8 +182,101 @@ namespace Pmi
             return double.Parse(data.Substring(start, lenght));
         }
 
-        public Employee GetEmployee(string path, string lastName, string name, string patronymic, string rank)
+        /// <summary>
+        /// Добавляет стили к документу
+        /// </summary>
+        /// <param name="document"></param>
+        /// <param name="stylesheet"></param>
+        private void AppendStylesToDocument(SpreadsheetDocument document, ExcelStylesheet stylesheet)
         {
+            var documentStylesheet = document.WorkbookPart.WorkbookStylesPart.Stylesheet;
+            foreach (var font in stylesheet.Fonts)
+                documentStylesheet.Fonts.AppendChild(font.CloneNode(true));
+            foreach (var fill in stylesheet.Fills)
+                documentStylesheet.Fills.AppendChild(fill.CloneNode(true));
+            foreach (var border in stylesheet.Borders)
+                documentStylesheet.Borders.AppendChild(border.CloneNode(true));
+            foreach (var cellFormat in stylesheet.CellFormats)
+                documentStylesheet.CellFormats.AppendChild((CellFormat)cellFormat);
+            document.Save();
+        }
+
+        /// <summary>
+        /// Инициализирует необходимые стили и заносит информацию о них в кэш
+        /// </summary>
+        /// <param name="document"></param>
+        private void InitStyles(SpreadsheetDocument document, out List<ExcelCellFormat> cellFormats)
+        {
+            var workbookpart = document.WorkbookPart;
+            var workStylePart = workbookpart.WorkbookStylesPart;
+            var styleSheet = workStylePart.Stylesheet;
+
+            // вынести в отдельный метод?
+            #region генерация стилей для страниц
+            ExcelStylesheetBuilder builder = new ExcelStylesheetBuilder((uint)styleSheet.Fonts.ChildElements.Count,
+                (uint)styleSheet.CellFormats.ChildElements.Count);
+            ExcelStylesheetDirector director = new ExcelStylesheetDirector() { StylesheetBuilder = builder };
+
+            director.BuildReportStylesheet();
+            var reportStylesheet = builder.GetStylesheet();
+            #endregion            
+
+            AppendStylesToDocument(document, reportStylesheet);
+            cacheService.Cache(reportStylesheet.CellFormats);
+            cellFormats = reportStylesheet.CellFormats;
+        }
+
+        /// <summary>
+        /// Сравнивает два формата ячейки на идентичность по полям
+        /// </summary>
+        /// <param name="first"></param>
+        /// <param name="second"></param>
+        /// <returns></returns>
+        public bool AreCellFormatEquals(CellFormat first, ExcelCellFormat second)
+        {
+            return first.FontId == second.FontId && first.Alignment.Horizontal.Value == second.HorizontalAlignment
+                && first.Alignment.Vertical.Value == second.VerticalAlignment && first.BorderId == second.BorderId && first.FillId == second.FillId;
+        }
+
+        /// <summary>
+        /// Проверяет, совпадают ли индексы стилей в документе с индексами стилей в кэше. Сравнивает только первые и последние форматы ячеек.
+        /// </summary>
+        /// <param name="document"></param>
+        /// <param name="stylesheet"></param>
+        public bool AreIndexesSame(SpreadsheetDocument document, out List<ExcelCellFormat> cellFormats)
+        {
+            var excelCellFormats = cacheService.UploadCache();
+            int firstId = Convert.ToInt32(excelCellFormats.First().Id);
+            int lastId = Convert.ToInt32(excelCellFormats.Last().Id);
+            if (document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements.Count < lastId)
+            {
+            }
+            else if (AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[firstId] as CellFormat, excelCellFormats.First())
+                && AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[lastId] as CellFormat, excelCellFormats.Last()))
+            {
+                cellFormats = excelCellFormats;
+                return true;
+            }
+            cellFormats = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Сбор данных о преподавателе
+        /// </summary>
+        /// <param name="path"> Путь к файлу с данными</param>
+        /// <param name="status"> Статус выполнения</param>
+        /// <param name="progress"> Прогресс выполнения</param>
+        /// <param name="lastName"> Фамилия</param>
+        /// <param name="name"> Имя</param>
+        /// <param name="patronymic"> Отчество</param>
+        /// <param name="rank"> Должность</param>
+        /// <param name="year"> Учебный год</param>
+        /// <returns> Преподаватель</returns>
+        public Employee GetEmployee(string path, ref string status, ref uint progress, string lastName, string name, string patronymic, string rank, string year)
+        {
+            status = "Сбор данных: ";
+            OnStatusChanged?.Invoke(this, null);
             using (SpreadsheetDocument doc = SpreadsheetDocument.Open(path, true))
             {
                 SharedStringTablePart shareStringPart;
@@ -208,7 +304,13 @@ namespace Pmi
                 employee.FirstName = name;
                 employee.Patronymic = patronymic;
                 employee.Rank = rank;
+                progress += 1;
+                OnProgressChanged?.Invoke(this, null);
 
+                status = "Сбор данных: Дисциплины";
+                OnStatusChanged?.Invoke(this, null);
+                #region Создание дисциплин
+                
                 int row = 5;
                 while (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString()) != "Итого по ")
                 {
@@ -327,7 +429,14 @@ namespace Pmi
                     }
                     row++;
                 }
+                progress += 1;
+                OnProgressChanged?.Invoke(this, null);
+                #endregion
 
+                status = "Сбор данных: Дополнительные данные";
+                OnStatusChanged?.Invoke(this, null);
+                #region Создание доп. данных
+                
                 worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(Sheet2.Id));
                 row = 4;
                 Discipline bachelor = new Discipline("Диплом бакалавры");
@@ -358,6 +467,8 @@ namespace Pmi
                     }
                     row++;
                 }
+                progress += 1;
+                OnProgressChanged?.Invoke(this, null);
                 worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(SheetDipl.Id));
                 row = 2;
                 while (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "B" + row.ToString()) != "0")
@@ -376,7 +487,14 @@ namespace Pmi
                     }
                     row++;
                 }
-                //________________________________ПРАКТИКА________________________________
+                progress += 1;
+                OnProgressChanged?.Invoke(this, null);
+                #endregion
+
+                status = "Сбор данных: Практика";
+                OnStatusChanged?.Invoke(this, null);
+                #region Практика
+                
                 worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(SheetPrac.Id));
                 row = 3;
                 for (int j = 0; j < 2; j++)
@@ -425,99 +543,30 @@ namespace Pmi
                     row = 4;
                     worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(SheetPracMag.Id));
                 }
+                progress += 1;
+                OnProgressChanged?.Invoke(this, null);
+                #endregion
                 return employee;
             }
         }
-        #endregion
-
-
-
+        
         /// <summary>
-        /// Добавляет стили к документу
+        /// Создает структуру отчёта
         /// </summary>
-        /// <param name="document"></param>
-        /// <param name="stylesheet"></param>
-        private void AppendStylesToDocument(SpreadsheetDocument document, ExcelStylesheet stylesheet)
-        {
-            var documentStylesheet = document.WorkbookPart.WorkbookStylesPart.Stylesheet;
-            foreach (var font in stylesheet.Fonts)
-                documentStylesheet.Fonts.AppendChild(font.CloneNode(true));
-            foreach (var fill in stylesheet.Fills)
-                documentStylesheet.Fills.AppendChild(fill.CloneNode(true));
-            foreach (var border in stylesheet.Borders)
-                documentStylesheet.Borders.AppendChild(border.CloneNode(true));            
-            foreach (var cellFormat in stylesheet.CellFormats)
-                documentStylesheet.CellFormats.AppendChild((CellFormat)cellFormat);
-            document.Save();
-        }
-
-        /// <summary>
-        /// Инициализирует необходимые стили и заносит информацию о них в кэш
-        /// </summary>
-        /// <param name="document"></param>
-        private void InitStyles(SpreadsheetDocument document, out List<ExcelCellFormat> cellFormats)
-        {
-            var workbookpart = document.WorkbookPart;
-            var workStylePart = workbookpart.WorkbookStylesPart;
-            var styleSheet = workStylePart.Stylesheet;
-
-            // вынести в отдельный метод?
-            #region генерация стилей для страниц
-            ExcelStylesheetBuilder builder = new ExcelStylesheetBuilder((uint)styleSheet.Fonts.ChildElements.Count,
-                (uint)styleSheet.CellFormats.ChildElements.Count);
-            ExcelStylesheetDirector director = new ExcelStylesheetDirector() { StylesheetBuilder = builder };
-
-            director.BuildReportStylesheet();
-            var reportStylesheet = builder.GetStylesheet();
-            #endregion            
-
-            AppendStylesToDocument(document, reportStylesheet);
-            cacheService.Cache(reportStylesheet.CellFormats);
-            cellFormats = reportStylesheet.CellFormats;
-        }
-
-        /// <summary>
-        /// Сравнивает два формата ячейки на идентичность по полям
-        /// </summary>
-        /// <param name="first"></param>
-        /// <param name="second"></param>
-        /// <returns></returns>
-        public bool AreCellFormatEquals(CellFormat first, ExcelCellFormat second)
-        {
-            return first.FontId == second.FontId && first.Alignment.Horizontal.Value == second.HorizontalAlignment
-                && first.Alignment.Vertical.Value == second.VerticalAlignment && first.BorderId == second.BorderId && first.FillId == second.FillId;
-        }
-
-        /// <summary>
-        /// Проверяет, совпадают ли индексы стилей в документе с индексами стилей в кэше. Сравнивает только первые и последние форматы ячеек.
-        /// </summary>
-        /// <param name="document"></param>
-        /// <param name="stylesheet"></param>
-        public bool AreIndexesSame(SpreadsheetDocument document, out List<ExcelCellFormat> cellFormats)
-        {
-            var excelCellFormats =  cacheService.UploadCache();
-            int firstId = Convert.ToInt32(excelCellFormats.First().Id);
-            int lastId = Convert.ToInt32(excelCellFormats.Last().Id);
-            if (document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements.Count < firstId
-                || document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements.Count < lastId)
-            {
-                cellFormats = null;
-                return false;
-            }
-            if (AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[firstId] as CellFormat, excelCellFormats.First())
-                && AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[lastId] as CellFormat, excelCellFormats.Last()))
-            {
-                cellFormats = excelCellFormats;
-                return true;
-            }
-            cellFormats = null;
-            return false;
-        }
-
-        public void CreateRaport(Employee employee, WorksheetPart worksheetPart, SharedStringTablePart shareStringPart, List<ExcelCellFormat> cellFormats)
+        /// <param name="employee"> Преподаватель</param>
+        /// <param name="worksheetPart"> Часть страницы</param>
+        /// <param name="shareStringPart"> Таблица строк</param>
+        /// <param name="cellFormats"> Стили ячеек</param>
+        /// <param name="status"> Статус выполнения</param>
+        /// <param name="progress"> Прогресс выполнения</param>
+        private void CreateRaport(Employee employee, WorksheetPart worksheetPart, SharedStringTablePart shareStringPart
+            , List<ExcelCellFormat> cellFormats, ref string status, ref uint progress)
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
-            #region CreateCloumn
+
+            status = "Создаётся структура документа";
+            OnStatusChanged?.Invoke(this, null);
+            #region Создание ширины столбцов и соединений ячеек
             if (worksheetPart.Worksheet.GetFirstChild<Columns>() == null)
             {
                 Columns columns = new Columns();
@@ -540,6 +589,8 @@ namespace Pmi
                 columns.Append(new Column() { Min = 17, Max = 17, Width = 10.43, CustomWidth = true });
                 worksheetPart.Worksheet.InsertAt(columns, 0);
             }
+            progress += 1;
+            OnProgressChanged?.Invoke(this, null);
             MergeCells mergeCells = new MergeCells();
             if (worksheetPart.Worksheet.Elements<MergeCells>().Count() == 0)
             {
@@ -604,9 +655,11 @@ namespace Pmi
                 mergeCells.Append(new MergeCell() { Reference = new StringValue("Q11:Q13") });
                 mergeCells.Append(new MergeCell() { Reference = new StringValue("A14:B14") });
             }
+            progress += 1;
+            OnProgressChanged?.Invoke(this, null);
             #endregion
-            #region CreateRow
-            
+            #region Создание Шапки документа
+
             uint Total = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.Total).Id;
             uint ColumnName = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.ColumnName).Id;
             uint ColumnNumber = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.ColumnNumber).Id;
@@ -668,7 +721,14 @@ namespace Pmi
                     cell.StyleIndex = ColumnNumber;
                 }
             }
+            progress += 1;
+            OnProgressChanged?.Invoke(this, null);
             #endregion
+
+            status = "Заполняются данные по осеннему семестру";
+            OnStatusChanged?.Invoke(this, null);
+            #region Создание осеннего семестра
+            
             mergeCells.Append(new MergeCell() { Reference = new StringValue("A15:Q15") });
             Cell semCell = InsertCellInWorksheet("A", 15, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("О  С  Е  Н  Н  И  Й     С  Е  М  Е  С  Т  Р  ", shareStringPart).ToString());
@@ -749,8 +809,13 @@ namespace Pmi
                 row++;
             }
             mergeCells.Append(new MergeCell() { Reference = new StringValue($"A{row}:C{row}") });
+            progress += 1;
+            OnProgressChanged?.Invoke(this, null);
+            #endregion
 
-            #region TotalSpring
+            status = "Рассчитываются итоговые значения по осеннему семестру";
+            OnStatusChanged?.Invoke(this, null);
+            #region Итог Осеннего семестра
             semCell = InsertCellInWorksheet("A", row, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("Итого за осенний семестр", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
@@ -780,8 +845,14 @@ namespace Pmi
                 cell.StyleIndex = data.StyleIndex;
             }
             totalS = null;
+            progress += 1;
+            OnProgressChanged?.Invoke(this, null);
             #endregion
 
+            status = "Заполняются данные по весеннему семестру";
+            OnStatusChanged?.Invoke(this, null);
+            #region Создание весеннего семестра
+            
             row++;
             mergeCells.Append(new MergeCell() { Reference = new StringValue($"A{row}:Q{row}") });
             semCell = InsertCellInWorksheet("A", row, worksheetPart);
@@ -863,7 +934,14 @@ namespace Pmi
                 row++;
             }
             mergeCells.Append(new MergeCell() { Reference = new StringValue($"A{row}:C{row}") });
-            #region TotalAutumn
+            progress += 1;
+            OnProgressChanged?.Invoke(this, null);
+            #endregion
+
+            status = "Рассчитываются итоговые значения по весеннему семестру";
+            OnStatusChanged?.Invoke(this, null);
+            #region Итог Осеннего семестра
+
             semCell = InsertCellInWorksheet("A", row, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("Итого за весенний семестр", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
@@ -893,12 +971,15 @@ namespace Pmi
                 cell.StyleIndex = data.StyleIndex;
             }
             totalA = null;
-            #endregion
-
             row++;
             mergeCells.Append(new MergeCell() { Reference = new StringValue($"A{row}:C{row}") });
-
-            #region Total
+            progress += 1;
+            OnProgressChanged?.Invoke(this, null);
+            #endregion
+            
+            status = "Рассчитываются итоговые значения";
+            OnStatusChanged?.Invoke(this, null);
+            #region Итог
             semCell = InsertCellInWorksheet("A", row, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("ВСЕГО ЗА ГОД", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
@@ -928,7 +1009,6 @@ namespace Pmi
                 cell.StyleIndex = data.StyleIndex;
             }
             total = null;
-            #endregion
             row += 2;
             mergeCells.Append(new MergeCell() { Reference = new StringValue($"K{row}:O{row}") });
             semCell = InsertCellInWorksheet("K", row, worksheetPart);
@@ -940,10 +1020,22 @@ namespace Pmi
             semCell.CellValue = new CellValue(InsertSharedStringItem("подпись преподавателя", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
             semCell.StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.TeacherSignature).Id;
+            progress += 1;
+            OnProgressChanged?.Invoke(this, null);
+            #endregion
         }
 
-        public void CreateRaportSeparate(string path, Employee employee)
+        /// <summary>
+        /// Создает отчёт в отдельный файл
+        /// </summary>
+        /// <param name="path"> Путь к итоговому файлу</param>
+        /// <param name="employee"> Преподаватель</param>
+        /// <param name="status"> Статус выполнения</param>
+        /// <param name="progress"> Прогресс выполнения</param>
+        public void CreateRaportSeparate(string path, Employee employee, ref string status, ref uint progress)
         {
+            status = "Создаётся документ";
+            OnStatusChanged?.Invoke(this, null);
             SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Create(path, SpreadsheetDocumentType.Workbook);
             WorkbookPart workbookpart = spreadsheetDocument.AddWorkbookPart();
             workbookpart.Workbook = new Workbook();
@@ -967,7 +1059,11 @@ namespace Pmi
             {
                 shareStringPart = workbookpart.AddNewPart<SharedStringTablePart>();
             }
+            progress += 1;
+            OnProgressChanged?.Invoke(this, null);
 
+            status = "Загружаются стили";
+            OnStatusChanged?.Invoke(this, null);
             spreadsheetDocument.WorkbookPart.AddNewPart<WorkbookStylesPart>();
             spreadsheetDocument.WorkbookPart.WorkbookStylesPart.Stylesheet = new Stylesheet()
             {
@@ -981,16 +1077,37 @@ namespace Pmi
             director.BuildReportStylesheet();
             var reportStylesheet = builder.GetStylesheet();
             AppendStylesToDocument(spreadsheetDocument, reportStylesheet);
+            progress += 1;
+            OnProgressChanged?.Invoke(this, null);
 
-            CreateRaport(employee, worksheetPart, shareStringPart, reportStylesheet.CellFormats);
+            CreateRaport(employee, worksheetPart, shareStringPart, reportStylesheet.CellFormats, ref status, ref progress);
+
+            status = "Сохранение документа";
+            OnStatusChanged?.Invoke(this, null);
             workbookpart.Workbook.Save();
             spreadsheetDocument.Close();
+            progress += 1;
+            OnProgressChanged?.Invoke(this, null);
         }
 
-        public void CreateRaportInFile(string path, Employee employee)
+        /// <summary>
+        /// Создает отчёт в файле с данными
+        /// </summary>
+        /// <param name="path"> Путь к файлу</param>
+        /// <param name="employee"> Преподаватель</param>
+        /// <param name="status"> Статус выполнения</param>
+        /// <param name="progress"> Прогресс выполнения</param>
+        public void CreateRaportInFile(string path, Employee employee, ref string status, ref uint progress)
         {
+            status = "Открывается документ";
+            OnStatusChanged?.Invoke(this, null);
             using (SpreadsheetDocument doc = SpreadsheetDocument.Open(path, true))
             {
+                progress += 1;
+                OnProgressChanged?.Invoke(this, null);
+
+                status = "Загружается документ";
+                OnStatusChanged?.Invoke(this, null);
                 List<ExcelCellFormat> cellFormats = null;
                 if (!AreIndexesSame(doc, out cellFormats))
                 {
@@ -1006,10 +1123,17 @@ namespace Pmi
                     shareStringPart = doc.WorkbookPart.AddNewPart<SharedStringTablePart>();
                 }
                 var worksheetPart = GetSheet(doc.WorkbookPart, employee.LastName + " " + employee.FirstName[0] + "." + employee.Patronymic[0] + ".");
-                CreateRaport(employee, worksheetPart, shareStringPart, cellFormats);
+                progress += 1;
+                OnProgressChanged?.Invoke(this, null);
+
+                CreateRaport(employee, worksheetPart, shareStringPart, cellFormats, ref status, ref progress);
+
+                status = "Сохраняется документ";
+                OnStatusChanged?.Invoke(this, null);
                 doc.WorkbookPart.Workbook.Save();
+                progress += 1;
+                OnProgressChanged?.Invoke(this, null);
             }
         }
-
     }
 }
