@@ -4,12 +4,23 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Pmi"
-        mc:Ignorable="d"
+        xmlns:vms="clr-namespace:Pmi.ViewModel"
+        xmlns:views="clr-namespace:Pmi.View"
+        mc:Ignorable="d"         
         Title="MainWindow" MinHeight="390" Height="390" MinWidth="800" Width="800">
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
+        <DataTemplate x:Key="DocumentViewTemplate" DataType="{x:Type vms:DocumentViewModel}">
+            <views:document/>
+        </DataTemplate>
+        <DataTemplate x:Key="SettingsViewTemplate" DataType="{x:Type vms:SettingsViewModel}">
+            <views:settings/>
+        </DataTemplate>
+        <DataTemplate x:Key="LoadingViewTemplate" DataType="{x:Type vms:LoadingViewModel}">
+            <views:loading/>
+        </DataTemplate>
     </Window.Resources>
     <Grid>
         <Grid>
@@ -24,93 +35,29 @@
                         <TextBlock Margin="0,10,0,0" Text="Система формирования документов "/>
                     </Viewbox>
                 </Label>
-                <Button Command="{Binding ChangeWin}" Grid.Row="0" Margin="10" HorizontalAlignment="Left" VerticalAlignment="Stretch" Background="SkyBlue" Foreground="White">
+                <Button Command="{Binding OpenSettingsView}" Grid.Row="0" Margin="10" HorizontalAlignment="Left" VerticalAlignment="Stretch" Background="SkyBlue" Foreground="White">
                     <Viewbox>
                         <TextBlock Text="{Binding Icon}"/>
                     </Viewbox>
                 </Button>
-                <Grid Grid.Row="1" Visibility="{Binding SettingsVis}">
-                    <TextBlock Text=" ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"/>
-                </Grid>
-                <Grid Grid.Row="1" Visibility="{Binding LoadVis}">
-                    <TextBlock Text="{Binding Status}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="30,30,30,80"/>
-                    <ProgressBar Value="{Binding Progress}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="30" Height="30" Minimum="0" Maximum="16"/>
-                </Grid>
-                <Grid Grid.Row="1" Visibility="{Binding MainVis}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="0.9*"/>
-                        <ColumnDefinition Width="0.9*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="0.9*"/>
-                        <RowDefinition Height="3*"/>
-                        <RowDefinition Height="1.25*"/>
-                    </Grid.RowDefinitions>
-                    <Label Grid.Column="0" Grid.Row="0" Margin="10,10,10,10" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="SkyBlue" Foreground="White">
-                        <Viewbox>
-                            <TextBlock Margin="10,0,10,0" Text="Вариант документа"/>
-                        </Viewbox>
-                    </Label>
-                    <ListBox Grid.Column="0" Grid.Row="1" Grid.RowSpan="2" Margin="10,10,10,40" ItemsSource="{Binding ReportModes}" SelectedItem="{Binding SelectedMode}"/>
-                    <Label Grid.Column="1" Grid.Row="0" Margin="10,10,10,10" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="SkyBlue" Foreground="White">
-                        <Viewbox>
-                            <TextBlock Margin="10,0,10,0" Text="Преподаватель"/>
-                        </Viewbox>
-                    </Label>
-                    <ListBox Grid.Column="1" Grid.Row="1" Grid.RowSpan="2" Margin="10,10,10,40" ItemsSource="{Binding Employees}" SelectedItem="{Binding SelectedEmployee}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel>
-                                    <TextBlock Text="{Binding FIO}"></TextBlock>
-                                    <TextBlock Text="{Binding Rank}"></TextBlock>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                    <GroupBox Margin="10,10,10,0" Grid.RowSpan="2" Grid.Column="2" Grid.ColumnSpan="2">
-                        <GroupBox.Header>Выбранные параметры</GroupBox.Header>
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="0.5*"/>
-                                <RowDefinition Height="2*"/>
-                                <RowDefinition Height="0.5*"/>
-                                <RowDefinition Height="2*"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="2*"/>
-                            </Grid.ColumnDefinitions>
-                            <Viewbox Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Stretch">
-                                <TextBox Text="{Binding Year}" Margin="10,3,10,3" MinWidth="100" Background="LightGray"/>
-                            </Viewbox>
-                            <Viewbox Grid.Column="1" Grid.Row="0">
-                                <Label VerticalAlignment="Center" HorizontalAlignment="Right" Content="Учебный год(Формат: ХХХХ/ХХХХ)    " Foreground="Silver"/>
-                            </Viewbox>
-                            <Label Background="LightGray" Grid.Row="1" Grid.ColumnSpan="2"/>
-                            <Viewbox HorizontalAlignment="Left" Grid.Row="1">
-                                <TextBlock Text="Документ:"/>
-                            </Viewbox>
-                            <Label Content="{Binding SelectedMode }" Grid.Row="2" Grid.ColumnSpan="2" Background="LightGray"/>
-                            <Label Background="Silver" Grid.Row="3" Grid.ColumnSpan="2"/>
-                            <Viewbox HorizontalAlignment="Left" Grid.Row="3">
-                                <TextBlock Text="Преподаватель:"/>
-                            </Viewbox>
-                            <Label Content="{Binding SelectedEmployee.FIO }" Grid.Row="4" Grid.ColumnSpan="2" Background="Silver"/>
-                        </Grid>
-                    </GroupBox>
-                    <Button Grid.Row="2" Grid.Column="2" Margin="15" Background="RoyalBlue">
-                        <Viewbox>
-                            <TextBlock Margin="10,0,10,0" TextAlignment="Center">Сформировать для всех<LineBreak/>преподавателей</TextBlock>
-                        </Viewbox>
-                    </Button>
-                    <Button Grid.Row="2" Grid.Column="3" Margin="15" Background="DodgerBlue" Command="{Binding CreateReport}">
-                        <Viewbox>
-                            <TextBlock Margin="10,0,10,0" TextAlignment="Center">Сформировать для<LineBreak/>выбранного преподавателя</TextBlock>
-                        </Viewbox>
-                    </Button>
+                <Grid Margin="0,4.8,-0.4,9.8" Grid.Row="1">
+                    <ContentControl Content="{Binding CurrentViewModel}">
+                        <ContentControl.Style>
+                            <Style TargetType="{x:Type ContentControl}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding OpenedViewIndex}" Value="0">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource DocumentViewTemplate}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding OpenedViewIndex}" Value="1">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource SettingsViewTemplate}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding OpenedViewIndex}" Value="2">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource LoadingViewTemplate}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ContentControl.Style>
+                    </ContentControl>
                 </Grid>
                 <Label Grid.Row="3" Content="[ИНФО]   " Background="Silver" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" FontSize="14" Foreground="Gray"/>
             </Grid>
