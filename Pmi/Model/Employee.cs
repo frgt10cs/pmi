@@ -8,15 +8,31 @@ namespace Pmi.Model
 {
     class Employee
     {
-        public string FirstName { get; set; }
         public string LastName { get; set; }
+        public string FirstName { get; set; }
         public string Patronymic { get; set; }
         public string Rank { get; set; }
+        public string StudyRank { get; set; }
+        public string Rate { get; set; }
+        public string Staffing { get; set; }
         public Semester AutumnSemester { get; set; }
         public Semester SpringSemester { get; set; }
 
         public Employee()
         {            
+            AutumnSemester = new Semester();
+            SpringSemester = new Semester();
+        }
+
+        public Employee(EmployeeViewModel eVM)
+        {
+            LastName = eVM.LastName;
+            FirstName = eVM.FirstName;
+            Patronymic = eVM.Patronymic;
+            Rank = eVM.Rank;
+            StudyRank = eVM.StudyRank;
+            Rate = eVM.Rate;
+            Staffing = eVM.Staffing;
             AutumnSemester = new Semester();
             SpringSemester = new Semester();
         }
@@ -44,17 +60,6 @@ namespace Pmi.Model
         public double Year()
         {
             return AutumnSemester.TotalForSemester() + SpringSemester.TotalForSemester();
-        }
-
-        public static explicit operator EmployeeViewModel(Employee employee)
-        {
-            return new EmployeeViewModel()
-            {
-                LastName = employee.LastName,
-                FirstName = employee.FirstName[0],                
-                Patronymic = employee.Patronymic[0],
-                Rank = employee.Rank
-            };
         }
     }
 }

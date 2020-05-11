@@ -76,7 +76,7 @@
     <Compile Include="Directors\ExcelStylesheetDirector.cs" />
     <Compile Include="Model\Discipline.cs" />
     <Compile Include="Model\Employee.cs" />
-    <Compile Include="Model\EmployeeViewModel.cs" />
+    <Compile Include="ViewModel\EmployeeViewModel.cs" />
     <Compile Include="Model\ExcelCellFormat.cs" />
     <Compile Include="Model\ExcelStylesheet.cs" />
     <Compile Include="Model\RelayCommand.cs" />

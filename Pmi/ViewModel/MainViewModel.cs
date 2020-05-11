@@ -1,6 +1,9 @@
 ﻿using Pmi.Model;
 using Pmi.Service.Abstraction;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Configuration;
+using System.IO;
 
 namespace Pmi.ViewModel
 {
@@ -8,76 +11,52 @@ namespace Pmi.ViewModel
     {
 
         private int openedViewIndex;
-        public int OpenedViewIndex { get { return openedViewIndex; } set { openedViewIndex = value; OnPropertyChanged("OpenedViewIndex");} }
-
         private BaseViewModel currentViewModel;
-        public BaseViewModel CurrentViewModel { get { return currentViewModel; } set { currentViewModel = value; OnPropertyChanged("CurrentViewModel"); } }        
-
         private string icon;
-        public string Icon { get { return icon; } set { icon = value; OnPropertyChanged("Icon"); } }
-
         private DocumentViewModel documentViewModel;
         private SettingsViewModel settingsViewModel;
         private LoadingViewModel loadingViewModel;
+        private CacheService<List<EmployeeViewModel>> cacheService;
+
+        public ObservableCollection<EmployeeViewModel> Employees { get; set; } = new ObservableCollection<EmployeeViewModel>();
+        public int OpenedViewIndex { get { return openedViewIndex; } set { openedViewIndex = value; OnPropertyChanged("OpenedViewIndex");} }
+        public BaseViewModel CurrentViewModel { get { return currentViewModel; } set { currentViewModel = value; OnPropertyChanged("CurrentViewModel"); } }        
+        public string Icon { get { return icon; } set { icon = value; OnPropertyChanged("Icon"); } }
+
 
         public MainViewModel(CacheService<List<EmployeeViewModel>> cacheServ, Excel cacheExcel)
         {
             Icon = "⚙";
-            documentViewModel = new DocumentViewModel();
-            settingsViewModel = new SettingsViewModel();
-            loadingViewModel = new LoadingViewModel();
+            cacheService = cacheServ;
+            var cache = cacheServ.UploadCache();
+            string path = File.Exists(ConfigurationManager.AppSettings.Get("pathCache")) ? File.ReadAllText(ConfigurationManager.AppSettings.Get("pathCache")) : "";
+            ConfigurationManager.AppSettings.Set("filePath", path);
+            
+            if (cache == null)
+            {
+
+            }
+            else
+            {
+                foreach (var employee in cache)
+                {
+                    Employees.Add(employee);
+                }
+            }
+            
+            documentViewModel = new DocumentViewModel(Employees, cacheExcel, new RelayCommand(obj =>
+            {
+                OpenedViewIndex = 2;
+                CurrentViewModel = loadingViewModel;
+            }), new RelayCommand(obj =>
+            {
+                OpenedViewIndex = 0;
+                CurrentViewModel = documentViewModel;
+            }));
+            settingsViewModel = new SettingsViewModel(Employees);
+            loadingViewModel = new LoadingViewModel(cacheExcel);
             OpenedViewIndex = 0;
             CurrentViewModel = documentViewModel;
-
-            //var cache = cacheServ.UploadCache();        
-            //if(cache==null)
-            //{
-
-            //}
-            //else
-            //{
-            //    foreach(var employee in cache)
-            //    {
-            //        Employees.Add(employee);
-            //    }
-            //}
-
-            //MainVis = Visibility.Visible;
-            //LoadVis = Visibility.Hidden;
-            //SettingsVis = Visibility.Hidden;
-            //Icon = "⚙";
-
-            //excel = cacheExcel;
-            //excel.OnProgressChanged += (s, e) => OnPropertyChanged("Progress");
-            //excel.OnStatusChanged += (s, e) => OnPropertyChanged("Status");
-
-            //ReportModes = new ObservableCollection<string>()
-            //{
-            //    "Сформировать отчёт по преподавателю"
-            //};
-
-            //createReport = new RelayCommand(obj =>
-            //{
-            //    Loading();
-            //},
-            //_obj => selectedEmployee != null && selectedMode != null);
-
-            //changeWin = new RelayCommand(obj =>
-            //{
-            //    if (Icon == "⚙")
-            //    {
-            //        MainVis = Visibility.Hidden;
-            //        SettingsVis = Visibility.Visible;
-            //        Icon = "←";
-            //    }
-            //    else
-            //    {
-            //        MainVis = Visibility.Visible;
-            //        SettingsVis = Visibility.Hidden;
-            //        Icon = "⚙";
-            //    }
-            //},
-            //_obj => LoadVis == Visibility.Hidden);
         }
 
         private RelayCommand openSettingsView;
@@ -89,7 +68,7 @@ namespace Pmi.ViewModel
                 {
                     if (CurrentViewModel == documentViewModel)
                     {
-                        Icon = "Блять";
+                        Icon = "←";
                         OpenedViewIndex = 1;
                         CurrentViewModel = settingsViewModel;                        
                     }
@@ -97,23 +76,16 @@ namespace Pmi.ViewModel
                     {
                         Icon = "⚙";
                         OpenedViewIndex = 0;
-                        CurrentViewModel = documentViewModel;                        
+                        CurrentViewModel = documentViewModel;
+                        if (settingsViewModel.IsChanged)
+                        {
+                            File.WriteAllText(ConfigurationManager.AppSettings.Get("pathCache"), ConfigurationManager.AppSettings.Get("filePath"));
+                            cacheService.Cache(new List<EmployeeViewModel>(Employees));
+                            settingsViewModel.IsChanged = false;
+                        }
                     }
                 }));
             }
-        }
-
-
-        private async void Loading()
-        {
-            //Status = "";
-            //Progress = 0;
-            //MainVis = Visibility.Hidden;
-            //LoadVis = Visibility.Visible;
-            //await Task.Run(() => { excel.CreateRaportInFile("Data.xlsm", excel.GetEmployee("Data.xlsm", ref status, ref progress
-            //    , "Заботин", "Владислав", "Иванович", "Профессор", Year), ref status, ref progress); Console.WriteLine(Progress); });
-            //MainVis = Visibility.Visible;
-            //LoadVis = Visibility.Hidden;
         }
     }
 }

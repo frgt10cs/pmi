@@ -6,10 +6,8 @@
              xmlns:local="clr-namespace:Pmi.View"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Name="LoadingView">
-        <Grid Grid.Row="1">
-            <TextBlock Text="{Binding Status}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="30,30,30,80"/>
-            <ProgressBar Value="{Binding Progress}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="30" Height="30" Minimum="0" Maximum="16"/>
-        </Grid>
+    <Grid Name="LoadingView" Grid.Row="1">
+        <TextBlock Text="{Binding Status}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="30,30,30,80"/>
+        <ProgressBar Value="{Binding Progress}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="30" Height="30" Minimum="0" Maximum="16"/>
     </Grid>
 </UserControl>

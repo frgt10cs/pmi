@@ -265,18 +265,13 @@ namespace Pmi
         /// Сбор данных о преподавателе
         /// </summary>
         /// <param name="path"> Путь к файлу с данными</param>
-        /// <param name="status"> Статус выполнения</param>
-        /// <param name="progress"> Прогресс выполнения</param>
-        /// <param name="lastName"> Фамилия</param>
-        /// <param name="name"> Имя</param>
-        /// <param name="patronymic"> Отчество</param>
-        /// <param name="rank"> Должность</param>
+        /// <param name="employee"> Преподаватель</param>
         /// <param name="year"> Учебный год</param>
         /// <returns> Преподаватель</returns>
-        public Employee GetEmployee(string path, ref string status, ref uint progress, string lastName, string name, string patronymic, string rank, string year)
+        public Employee GetEmployee(string path, Employee employee, string year)
         {
-            status = "Сбор данных: ";
-            OnStatusChanged?.Invoke(this, null);
+            OnProgressChanged?.Invoke(0, null);
+            OnStatusChanged?.Invoke("Сбор данных: ", null);
             using (SpreadsheetDocument doc = SpreadsheetDocument.Open(path, true))
             {
                 SharedStringTablePart shareStringPart;
@@ -299,16 +294,9 @@ namespace Pmi
                     return null;
                 }
                 WorksheetPart worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(Sheet1.Id));
-                Employee employee = new Employee();
-                employee.LastName = lastName;
-                employee.FirstName = name;
-                employee.Patronymic = patronymic;
-                employee.Rank = rank;
-                progress += 1;
-                OnProgressChanged?.Invoke(this, null);
-
-                status = "Сбор данных: Дисциплины";
-                OnStatusChanged?.Invoke(this, null);
+                OnProgressChanged?.Invoke(1, null);
+                
+                OnStatusChanged?.Invoke("Сбор данных: Дисциплины", null);
                 #region Создание дисциплин
                 
                 int row = 5;
@@ -318,23 +306,23 @@ namespace Pmi
                     string lekEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "O" + row.ToString());
                     string prcEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "R" + row.ToString());
                     string labEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "U" + row.ToString());
-                    if (lekEmployee.Contains(lastName) || prcEmployee.Contains(lastName) || labEmployee.Contains(lastName))
+                    if (lekEmployee.Contains(employee.LastName) || prcEmployee.Contains(employee.LastName) || labEmployee.Contains(employee.LastName))
                     {
                         Discipline discipline = new Discipline(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()));
                         discipline.Groups = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString()).Split('\n').ToList();
                         discipline.CodeOP = "";
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "M" + row.ToString()) != "0" &&
-                            lekEmployee.Contains(lastName))
+                            lekEmployee.Contains(employee.LastName))
                         {
                             discipline.Lectures = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "N" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
                             discipline.ConsultationsByTheory = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "V" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "P" + row.ToString()) != "0" &&
-                            prcEmployee.Contains(lastName))
+                            prcEmployee.Contains(employee.LastName))
                         {
                             if (prcEmployee.Contains(';'))
                             {
-                                discipline.PracticalWork = GetHour(prcEmployee, lastName);
+                                discipline.PracticalWork = GetHour(prcEmployee, employee.LastName);
                             }
                             else
                             {
@@ -342,11 +330,11 @@ namespace Pmi
                             }
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "S" + row.ToString()) != "0" &&
-                            labEmployee.Contains(lastName))
+                            labEmployee.Contains(employee.LastName))
                         {
                             if (labEmployee.Contains(';'))
                             {
-                                discipline.LaboratoryWork = GetHour(labEmployee, lastName);
+                                discipline.LaboratoryWork = GetHour(labEmployee, employee.LastName);
                             }
                             else
                             {
@@ -354,17 +342,17 @@ namespace Pmi
                             }
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "W" + row.ToString()) != "0" &&
-                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "Y" + row.ToString()).Contains(lastName))
+                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "Y" + row.ToString()).Contains(employee.LastName))
                         {
                             discipline.Coursework = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "X" + row.ToString()));
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AL" + row.ToString()) != "0" &&
-                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AN" + row.ToString()).Contains(lastName))
+                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AN" + row.ToString()).Contains(employee.LastName))
                         {
                             discipline.Tests = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AM" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AO" + row.ToString()) != "0" &&
-                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AQ" + row.ToString()).Contains(lastName))
+                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AQ" + row.ToString()).Contains(employee.LastName))
                         {
                             discipline.Exam = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AP" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
                         }
@@ -375,23 +363,23 @@ namespace Pmi
                     lekEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AW" + row.ToString());
                     prcEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AZ" + row.ToString());
                     labEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BC" + row.ToString());
-                    if (lekEmployee.Contains(lastName) || prcEmployee.Contains(lastName) || labEmployee.Contains(lastName))
+                    if (lekEmployee.Contains(employee.LastName) || prcEmployee.Contains(employee.LastName) || labEmployee.Contains(employee.LastName))
                     {
                         Discipline discipline = new Discipline(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()));
                         discipline.Groups = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString()).Split('\n').ToList();
                         discipline.CodeOP = "";
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AU" + row.ToString()) != "0" &&
-                            lekEmployee.Contains(lastName))
+                            lekEmployee.Contains(employee.LastName))
                         {
                             discipline.Lectures = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AV" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
                             discipline.ConsultationsByTheory = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BD" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AX" + row.ToString()) != "0" &&
-                            prcEmployee.Contains(lastName))
+                            prcEmployee.Contains(employee.LastName))
                         {
                             if (prcEmployee.Contains(';'))
                             {
-                                discipline.PracticalWork = GetHour(prcEmployee, lastName);
+                                discipline.PracticalWork = GetHour(prcEmployee, employee.LastName);
                             }
                             else
                             {
@@ -399,11 +387,11 @@ namespace Pmi
                             }
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BA" + row.ToString()) != "0" &&
-                            labEmployee.Contains(lastName))
+                            labEmployee.Contains(employee.LastName))
                         {
                             if (labEmployee.Contains(';'))
                             {
-                                discipline.LaboratoryWork = GetHour(labEmployee, lastName);
+                                discipline.LaboratoryWork = GetHour(labEmployee, employee.LastName);
                             }
                             else
                             {
@@ -411,17 +399,17 @@ namespace Pmi
                             }
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BE" + row.ToString()) != "0" &&
-                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BG" + row.ToString()).Contains(lastName))
+                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BG" + row.ToString()).Contains(employee.LastName))
                         {
                             discipline.Coursework = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BF" + row.ToString()));
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BT" + row.ToString()) != "0" &&
-                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BV" + row.ToString()).Contains(lastName))
+                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BV" + row.ToString()).Contains(employee.LastName))
                         {
                             discipline.Tests = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BU" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BW" + row.ToString()) != "0" &&
-                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BY" + row.ToString()).Contains(lastName))
+                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BY" + row.ToString()).Contains(employee.LastName))
                         {
                             discipline.Exam = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BX" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
                         }
@@ -429,12 +417,10 @@ namespace Pmi
                     }
                     row++;
                 }
-                progress += 1;
-                OnProgressChanged?.Invoke(this, null);
+                OnProgressChanged?.Invoke(2, null);
                 #endregion
-
-                status = "Сбор данных: Дополнительные данные";
-                OnStatusChanged?.Invoke(this, null);
+                
+                OnStatusChanged?.Invoke("Сбор данных: Дополнительные данные", null);
                 #region Создание доп. данных
                 
                 worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(Sheet2.Id));
@@ -448,7 +434,7 @@ namespace Pmi
                 Discipline gekM = new Discipline("Магистры");
                 while (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()) != "ГЭК комиссии")
                 {
-                    if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()).Contains(lastName))
+                    if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()).Contains(employee.LastName))
                     {
                         bachelor.Diploms = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "L" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
                         if (bachelor.Diploms != 0) { employee.AutumnSemester.Disciplines.Add(bachelor); }
@@ -467,13 +453,12 @@ namespace Pmi
                     }
                     row++;
                 }
-                progress += 1;
-                OnProgressChanged?.Invoke(this, null);
+                OnProgressChanged?.Invoke(3, null);
                 worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(SheetDipl.Id));
                 row = 2;
                 while (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "B" + row.ToString()) != "0")
                 {
-                    if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "B" + row.ToString()).Contains(lastName))
+                    if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "B" + row.ToString()).Contains(employee.LastName))
                     {
                         string group = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString());
                         if (group[1] == '4')
@@ -487,12 +472,10 @@ namespace Pmi
                     }
                     row++;
                 }
-                progress += 1;
-                OnProgressChanged?.Invoke(this, null);
+                OnProgressChanged?.Invoke(4, null);
                 #endregion
-
-                status = "Сбор данных: Практика";
-                OnStatusChanged?.Invoke(this, null);
+                
+                OnStatusChanged?.Invoke("Сбор данных: Практика", null);
                 #region Практика
                 
                 worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(SheetPrac.Id));
@@ -505,7 +488,7 @@ namespace Pmi
                         bool CanAdd = true;
                         while (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "A" + row.ToString()) != "№  п/п" && GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "A" + row.ToString()) != "0")
                         {
-                            if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()).Contains(lastName))
+                            if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()).Contains(employee.LastName))
                             {
                                 if (CanAdd)
                                 {
@@ -543,8 +526,7 @@ namespace Pmi
                     row = 4;
                     worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(SheetPracMag.Id));
                 }
-                progress += 1;
-                OnProgressChanged?.Invoke(this, null);
+                OnProgressChanged?.Invoke(5, null);
                 #endregion
                 return employee;
             }
@@ -557,15 +539,12 @@ namespace Pmi
         /// <param name="worksheetPart"> Часть страницы</param>
         /// <param name="shareStringPart"> Таблица строк</param>
         /// <param name="cellFormats"> Стили ячеек</param>
-        /// <param name="status"> Статус выполнения</param>
-        /// <param name="progress"> Прогресс выполнения</param>
         private void CreateRaport(Employee employee, WorksheetPart worksheetPart, SharedStringTablePart shareStringPart
-            , List<ExcelCellFormat> cellFormats, ref string status, ref uint progress)
+            , List<ExcelCellFormat> cellFormats)
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
-
-            status = "Создаётся структура документа";
-            OnStatusChanged?.Invoke(this, null);
+            
+            OnStatusChanged?.Invoke("Создаётся структура документа", null);
             #region Создание ширины столбцов и соединений ячеек
             if (worksheetPart.Worksheet.GetFirstChild<Columns>() == null)
             {
@@ -589,8 +568,7 @@ namespace Pmi
                 columns.Append(new Column() { Min = 17, Max = 17, Width = 10.43, CustomWidth = true });
                 worksheetPart.Worksheet.InsertAt(columns, 0);
             }
-            progress += 1;
-            OnProgressChanged?.Invoke(this, null);
+            OnProgressChanged?.Invoke(8, null);
             MergeCells mergeCells = new MergeCells();
             if (worksheetPart.Worksheet.Elements<MergeCells>().Count() == 0)
             {
@@ -655,8 +633,7 @@ namespace Pmi
                 mergeCells.Append(new MergeCell() { Reference = new StringValue("Q11:Q13") });
                 mergeCells.Append(new MergeCell() { Reference = new StringValue("A14:B14") });
             }
-            progress += 1;
-            OnProgressChanged?.Invoke(this, null);
+            OnProgressChanged?.Invoke(9, null);
             #endregion
             #region Создание Шапки документа
 
@@ -677,28 +654,44 @@ namespace Pmi
                 new CellData(){Column = "M", Row = 5, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.Position).Id, Data = "Зав. кафедрой ПМИ"},
                 new CellData(){Column = "M", Row = 6, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.ManagerInfo).Id, Data = "Зайдуллин С.С."},
                 new CellData(){Column = "O", Row = 7, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.ManagerInfoMeta).Id, Data = "подпись, ФИО"},
-                new CellData(){Column = "C", Row = 7, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.EmployeeInfo).Id, Data = $"{employee.Rank}, {employee.FirstName} {employee.LastName} {employee.Patronymic}"},
+                new CellData(){Column = "C", Row = 7, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.EmployeeInfo).Id, Data = $"{employee.Rank}, {employee.LastName} {employee.FirstName} {employee.Patronymic}, {employee.StudyRank}, {employee.Rate}, {employee.Staffing}"},
                 new CellData(){Column = "C", Row = 8, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.EmployeeInfoMeta).Id, Data = "должность, ФИО, ученая степень, ученое звание, доля ставки, штатность"},
                 new CellData(){Column = "C", Row = 9, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.Year).Id, Data = "на  2019 / 2020 учебный год"},
 
                 new CellData(){Column = "A", StyleIndex = ColumnName, Row = 11, Data = "Код ОП,\nиндекс дисциплины,\nнаименование дисциплины"},
+                new CellData(){Column = "B", StyleIndex = ColumnName, Row = 11, Data = ""},
                 new CellData(){Column = "C", StyleIndex = ColumnName, Row = 11, Data = "Группа"},
                 new CellData(){Column = "D", StyleIndex = ColumnName, Row = 11, Data = "Лекц"},
                 new CellData(){Column = "E", StyleIndex = ColumnName, Row = 11, Data = "Практ"},
                 new CellData(){Column = "F", StyleIndex = ColumnName, Row = 11, Data = "Лаб"},
                 new CellData(){Column = "G", StyleIndex = ColumnName, Row = 11, Data = "Консульт. студ."},
+                new CellData(){Column = "H", StyleIndex = ColumnName, Row = 11, Data = ""},
                 new CellData(){Column = "I", StyleIndex = ColumnName, Row = 11, Data = "Руководство"},
+                new CellData(){Column = "J", StyleIndex = ColumnName, Row = 11, Data = ""},
+                new CellData(){Column = "K", StyleIndex = ColumnName, Row = 11, Data = ""},
+                new CellData(){Column = "L", StyleIndex = ColumnName, Row = 11, Data = ""},
                 new CellData(){Column = "M", StyleIndex = ColumnName, Row = 11, Data = "ГЭК"},
                 new CellData(){Column = "N", StyleIndex = ColumnName, Row = 11, Data = "ЗАЧ"},
                 new CellData(){Column = "O", StyleIndex = ColumnName, Row = 11, Data = "ЭКЗ"},
                 new CellData(){Column = "P", StyleIndex = ColumnName, Row = 11, Data = "Другие  виды уч. работы"},
                 new CellData(){Column = "Q", StyleIndex = Total, Row = 11, Data = " ВСЕГО"},
+                new CellData(){Column = "A", StyleIndex = ColumnName, Row = 12, Data = ""},
+                new CellData(){Column = "B", StyleIndex = ColumnName, Row = 12, Data = ""},
+                new CellData(){Column = "C", StyleIndex = ColumnName, Row = 12, Data = ""},
+                new CellData(){Column = "D", StyleIndex = ColumnName, Row = 12, Data = ""},
+                new CellData(){Column = "E", StyleIndex = ColumnName, Row = 12, Data = ""},
+                new CellData(){Column = "F", StyleIndex = ColumnName, Row = 12, Data = ""},
                 new CellData(){Column = "G", StyleIndex = ColumnName, Row = 12, Data = "по теор. курсу"},
                 new CellData(){Column = "H", StyleIndex = ColumnName, Row = 12, Data = "по дипл. проект."},
                 new CellData(){Column = "I", StyleIndex = ColumnName, Row = 12, Data = "асп-ми"},
                 new CellData(){Column = "J", StyleIndex = ColumnName, Row = 12, Data = "курс. проект. (раб.)"},
                 new CellData(){Column = "K", StyleIndex = ColumnName, Row = 12, Data = "дипл. проект."},
                 new CellData(){Column = "L", StyleIndex = ColumnName, Row = 12, Data = "практ."},
+                new CellData(){Column = "M", StyleIndex = ColumnName, Row = 12, Data = ""},
+                new CellData(){Column = "N", StyleIndex = ColumnName, Row = 12, Data = ""},
+                new CellData(){Column = "O", StyleIndex = ColumnName, Row = 12, Data = ""},
+                new CellData(){Column = "P", StyleIndex = ColumnName, Row = 12, Data = ""},
+                new CellData(){Column = "Q", StyleIndex = ColumnName, Row = 12, Data = ""},
             };
             foreach (var data in cells)
             {
@@ -706,6 +699,13 @@ namespace Pmi
                 cell.CellValue = new CellValue(InsertSharedStringItem(data.Data, shareStringPart).ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
                 cell.StyleIndex = data.StyleIndex;
+            }
+            foreach (var column in Column)
+            {
+                Cell cell = InsertCellInWorksheet(column, 13, worksheetPart);
+                cell.CellValue = new CellValue(InsertSharedStringItem("", shareStringPart).ToString());
+                cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+                cell.StyleIndex = ColumnName;
             }
             for (uint i = 2; i < 17; i++)
             {
@@ -719,14 +719,15 @@ namespace Pmi
                     cell.CellValue = new CellValue("1");
                     cell.DataType = new EnumValue<CellValues>(CellValues.Number);
                     cell.StyleIndex = ColumnNumber;
+                    cell = InsertCellInWorksheet("B", 14, worksheetPart);
+                    cell.CellValue = new CellValue("");
+                    cell.StyleIndex = ColumnNumber;
                 }
             }
-            progress += 1;
-            OnProgressChanged?.Invoke(this, null);
+            OnProgressChanged?.Invoke(10, null);
             #endregion
-
-            status = "Заполняются данные по осеннему семестру";
-            OnStatusChanged?.Invoke(this, null);
+            
+            OnStatusChanged?.Invoke("Заполняются данные по осеннему семестру", null);
             #region Создание осеннего семестра
             
             mergeCells.Append(new MergeCell() { Reference = new StringValue("A15:Q15") });
@@ -809,17 +810,23 @@ namespace Pmi
                 row++;
             }
             mergeCells.Append(new MergeCell() { Reference = new StringValue($"A{row}:C{row}") });
-            progress += 1;
-            OnProgressChanged?.Invoke(this, null);
+            OnProgressChanged?.Invoke(11, null);
             #endregion
-
-            status = "Рассчитываются итоговые значения по осеннему семестру";
-            OnStatusChanged?.Invoke(this, null);
+            
+            OnStatusChanged?.Invoke("Рассчитываются итоговые значения по осеннему семестру", null);
             #region Итог Осеннего семестра
             semCell = InsertCellInWorksheet("A", row, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("Итого за осенний семестр", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
             semCell.StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.SemesterTotalLabel).Id;
+            semCell = InsertCellInWorksheet("B", row, worksheetPart);
+            semCell.CellValue = new CellValue(InsertSharedStringItem("", shareStringPart).ToString());
+            semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+            semCell.StyleIndex = ColumnTotal;
+            semCell = InsertCellInWorksheet("C", row, worksheetPart);
+            semCell.CellValue = new CellValue(InsertSharedStringItem("", shareStringPart).ToString());
+            semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+            semCell.StyleIndex = ColumnTotal;
             CellData[] totalS =
             {
                 new CellData(){Column = "D", Row = row, StyleIndex = ColumnTotal, Data = employee.SpringSemester.TotalForLectures().ToString()},
@@ -845,12 +852,10 @@ namespace Pmi
                 cell.StyleIndex = data.StyleIndex;
             }
             totalS = null;
-            progress += 1;
-            OnProgressChanged?.Invoke(this, null);
+            OnProgressChanged?.Invoke(12, null);
             #endregion
-
-            status = "Заполняются данные по весеннему семестру";
-            OnStatusChanged?.Invoke(this, null);
+            
+            OnStatusChanged?.Invoke("Заполняются данные по весеннему семестру", null);
             #region Создание весеннего семестра
             
             row++;
@@ -934,18 +939,24 @@ namespace Pmi
                 row++;
             }
             mergeCells.Append(new MergeCell() { Reference = new StringValue($"A{row}:C{row}") });
-            progress += 1;
-            OnProgressChanged?.Invoke(this, null);
+            OnProgressChanged?.Invoke(13, null);
             #endregion
-
-            status = "Рассчитываются итоговые значения по весеннему семестру";
-            OnStatusChanged?.Invoke(this, null);
+            
+            OnStatusChanged?.Invoke("Рассчитываются итоговые значения по весеннему семестру", null);
             #region Итог Осеннего семестра
 
             semCell = InsertCellInWorksheet("A", row, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("Итого за весенний семестр", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
             semCell.StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.SemesterTotalLabel).Id;
+            semCell = InsertCellInWorksheet("B", row, worksheetPart);
+            semCell.CellValue = new CellValue(InsertSharedStringItem("", shareStringPart).ToString());
+            semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+            semCell.StyleIndex = ColumnTotal;
+            semCell = InsertCellInWorksheet("C", row, worksheetPart);
+            semCell.CellValue = new CellValue(InsertSharedStringItem("", shareStringPart).ToString());
+            semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+            semCell.StyleIndex = ColumnTotal;
             CellData[] totalA =
             {
                 new CellData(){Column = "D", Row = row, StyleIndex = ColumnTotal, Data = employee.AutumnSemester.TotalForLectures().ToString()},
@@ -973,15 +984,21 @@ namespace Pmi
             totalA = null;
             row++;
             mergeCells.Append(new MergeCell() { Reference = new StringValue($"A{row}:C{row}") });
-            progress += 1;
-            OnProgressChanged?.Invoke(this, null);
+            OnProgressChanged?.Invoke(14, null);
             #endregion
             
-            status = "Рассчитываются итоговые значения";
-            OnStatusChanged?.Invoke(this, null);
+            OnStatusChanged?.Invoke("Рассчитываются итоговые значения", null);
             #region Итог
             semCell = InsertCellInWorksheet("A", row, worksheetPart);
             semCell.CellValue = new CellValue(InsertSharedStringItem("ВСЕГО ЗА ГОД", shareStringPart).ToString());
+            semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+            semCell.StyleIndex = Total;
+            semCell = InsertCellInWorksheet("B", row, worksheetPart);
+            semCell.CellValue = new CellValue(InsertSharedStringItem("", shareStringPart).ToString());
+            semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+            semCell.StyleIndex = Total;
+            semCell = InsertCellInWorksheet("C", row, worksheetPart);
+            semCell.CellValue = new CellValue(InsertSharedStringItem("", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
             semCell.StyleIndex = Total;
             CellData[] total =
@@ -1012,7 +1029,7 @@ namespace Pmi
             row += 2;
             mergeCells.Append(new MergeCell() { Reference = new StringValue($"K{row}:O{row}") });
             semCell = InsertCellInWorksheet("K", row, worksheetPart);
-            semCell.CellValue = new CellValue(InsertSharedStringItem("", shareStringPart).ToString());
+            semCell.CellValue = new CellValue(InsertSharedStringItem("_____________________", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
             row++;
             mergeCells.Append(new MergeCell() { Reference = new StringValue($"K{row}:O{row}") });
@@ -1020,8 +1037,7 @@ namespace Pmi
             semCell.CellValue = new CellValue(InsertSharedStringItem("подпись преподавателя", shareStringPart).ToString());
             semCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
             semCell.StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.TeacherSignature).Id;
-            progress += 1;
-            OnProgressChanged?.Invoke(this, null);
+            OnProgressChanged?.Invoke(15, null);
             #endregion
         }
 
@@ -1030,12 +1046,9 @@ namespace Pmi
         /// </summary>
         /// <param name="path"> Путь к итоговому файлу</param>
         /// <param name="employee"> Преподаватель</param>
-        /// <param name="status"> Статус выполнения</param>
-        /// <param name="progress"> Прогресс выполнения</param>
-        public void CreateRaportSeparate(string path, Employee employee, ref string status, ref uint progress)
+        public void CreateRaportSeparate(string path, Employee employee)
         {
-            status = "Создаётся документ";
-            OnStatusChanged?.Invoke(this, null);
+            OnStatusChanged?.Invoke("Создаётся документ", null);
             SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Create(path, SpreadsheetDocumentType.Workbook);
             WorkbookPart workbookpart = spreadsheetDocument.AddWorkbookPart();
             workbookpart.Workbook = new Workbook();
@@ -1059,11 +1072,9 @@ namespace Pmi
             {
                 shareStringPart = workbookpart.AddNewPart<SharedStringTablePart>();
             }
-            progress += 1;
-            OnProgressChanged?.Invoke(this, null);
-
-            status = "Загружаются стили";
-            OnStatusChanged?.Invoke(this, null);
+            OnProgressChanged?.Invoke(6, null);
+            
+            OnStatusChanged?.Invoke("Загружаются стили", null);
             spreadsheetDocument.WorkbookPart.AddNewPart<WorkbookStylesPart>();
             spreadsheetDocument.WorkbookPart.WorkbookStylesPart.Stylesheet = new Stylesheet()
             {
@@ -1077,17 +1088,14 @@ namespace Pmi
             director.BuildReportStylesheet();
             var reportStylesheet = builder.GetStylesheet();
             AppendStylesToDocument(spreadsheetDocument, reportStylesheet);
-            progress += 1;
-            OnProgressChanged?.Invoke(this, null);
+            OnProgressChanged?.Invoke(7, null);
 
-            CreateRaport(employee, worksheetPart, shareStringPart, reportStylesheet.CellFormats, ref status, ref progress);
-
-            status = "Сохранение документа";
-            OnStatusChanged?.Invoke(this, null);
+            CreateRaport(employee, worksheetPart, shareStringPart, reportStylesheet.CellFormats);
+            
+            OnStatusChanged?.Invoke("Сохранение документа", null);
             workbookpart.Workbook.Save();
             spreadsheetDocument.Close();
-            progress += 1;
-            OnProgressChanged?.Invoke(this, null);
+            OnProgressChanged?.Invoke(16, null);
         }
 
         /// <summary>
@@ -1095,19 +1103,14 @@ namespace Pmi
         /// </summary>
         /// <param name="path"> Путь к файлу</param>
         /// <param name="employee"> Преподаватель</param>
-        /// <param name="status"> Статус выполнения</param>
-        /// <param name="progress"> Прогресс выполнения</param>
-        public void CreateRaportInFile(string path, Employee employee, ref string status, ref uint progress)
+        public void CreateRaportInFile(string path, Employee employee)
         {
-            status = "Открывается документ";
-            OnStatusChanged?.Invoke(this, null);
+            OnStatusChanged?.Invoke("Открывается документ", null);
             using (SpreadsheetDocument doc = SpreadsheetDocument.Open(path, true))
             {
-                progress += 1;
-                OnProgressChanged?.Invoke(this, null);
-
-                status = "Загружается документ";
-                OnStatusChanged?.Invoke(this, null);
+                OnProgressChanged?.Invoke(6, null);
+                
+                OnStatusChanged?.Invoke("Загружается документ", null);
                 List<ExcelCellFormat> cellFormats = null;
                 if (!AreIndexesSame(doc, out cellFormats))
                 {
@@ -1123,16 +1126,13 @@ namespace Pmi
                     shareStringPart = doc.WorkbookPart.AddNewPart<SharedStringTablePart>();
                 }
                 var worksheetPart = GetSheet(doc.WorkbookPart, employee.LastName + " " + employee.FirstName[0] + "." + employee.Patronymic[0] + ".");
-                progress += 1;
-                OnProgressChanged?.Invoke(this, null);
+                OnProgressChanged?.Invoke(7, null);
 
-                CreateRaport(employee, worksheetPart, shareStringPart, cellFormats, ref status, ref progress);
-
-                status = "Сохраняется документ";
-                OnStatusChanged?.Invoke(this, null);
+                CreateRaport(employee, worksheetPart, shareStringPart, cellFormats);
+                
+                OnStatusChanged?.Invoke("Сохраняется документ", null);
                 doc.WorkbookPart.Workbook.Save();
-                progress += 1;
-                OnProgressChanged?.Invoke(this, null);
+                OnProgressChanged?.Invoke(16, null);
             }
         }
     }
