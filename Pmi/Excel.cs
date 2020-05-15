@@ -1083,7 +1083,7 @@ namespace Pmi
                 Fills = new Fills(),
                 CellFormats = new CellFormats()
             };
-            ExcelStylesheetBuilder builder = new ExcelStylesheetBuilder(0, 0);
+            ExcelStylesheetBuilder builder = new ExcelStylesheetBuilder(0, 0,0);
             ExcelStylesheetDirector director = new ExcelStylesheetDirector() { StylesheetBuilder = builder };
             director.BuildReportStylesheet();
             var reportStylesheet = builder.GetStylesheet();

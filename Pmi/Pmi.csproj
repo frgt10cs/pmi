@@ -70,10 +70,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Builders\ExcelBorderBuilder.cs" />
     <Compile Include="Builders\ExcelCellFormatBuilder.cs" />
     <Compile Include="Builders\ExcelStylesheetBuilder.cs" />
+    <Compile Include="Directors\BorderDirector.cs" />
     <Compile Include="Directors\ExcelCellFormatDirector.cs" />
     <Compile Include="Directors\ExcelStylesheetDirector.cs" />
+    <Compile Include="LoadingWindow.xaml.cs">
+      <DependentUpon>LoadingWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Model\Discipline.cs" />
     <Compile Include="Model\Employee.cs" />
     <Compile Include="ViewModel\EmployeeViewModel.cs" />

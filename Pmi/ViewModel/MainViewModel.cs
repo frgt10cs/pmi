@@ -2,8 +2,19 @@
 using Pmi.Service.Abstraction;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+<<<<<<< HEAD
 using System.Configuration;
 using System.IO;
+=======
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using Pmi.Model;
+using Pmi.Service.Abstraction;
+>>>>>>> newFonts
 
 namespace Pmi.ViewModel
 {
@@ -64,6 +75,7 @@ namespace Pmi.ViewModel
         {
             get
             {
+<<<<<<< HEAD
                 return openSettingsView ?? (openSettingsView = new RelayCommand(obj =>
                 {
                     if (CurrentViewModel == documentViewModel)
@@ -87,5 +99,15 @@ namespace Pmi.ViewModel
                 }));
             }
         }
+=======
+                var LoadVM = new LoadingViewModel();
+                var Load = new LoadingWindow();
+                Load.DataContext = LoadVM;
+                LoadVM.OnRequestClose += (s, e) => Load.Close();
+                Load.ShowDialog();
+            },
+            _obj => selectedEmployee != null && selectedMode != null );
+        }                   
+>>>>>>> newFonts
     }
 }

@@ -11,16 +11,18 @@ namespace Pmi.Builders
         private ExcelStylesheet stylesheet;                
         private uint fontStartId;
         private uint cellFormatStartId;
+        private uint borderStartId;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="fontStartId">Первый свободный идентификатор для шрифта</param>
         /// <param name="cellFormatStartId">Первый свободный идентификатор для формата ячейки</param>
-        public ExcelStylesheetBuilder(uint fontStartId, uint cellFormatStartId)
+        public ExcelStylesheetBuilder(uint fontStartId, uint cellFormatStartId, uint borderStartId)
         {
             this.fontStartId = fontStartId;
             this.cellFormatStartId = cellFormatStartId;
+            this.borderStartId = borderStartId;
             stylesheet = new ExcelStylesheet();            
         }
 
@@ -39,8 +41,14 @@ namespace Pmi.Builders
         /// <returns>Идентификатор добавленного шрифта</returns>
         public uint AddFont(Font font)
         {
-            stylesheet.Fonts.Add(font);             
+            stylesheet.Fonts.Add(font);
             return fontStartId++;
+        }
+
+        public uint AddBorder(Border border)
+        {
+            stylesheet.Borders.Add(border);
+            return borderStartId++;
         }
 
         /// <summary>
