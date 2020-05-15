@@ -33,6 +33,11 @@ namespace Pmi.Builders
             cellFormat.VerticalAlignment = defaultVerticalValue;
         }
 
+        public void SetWrapText(bool wrap)
+        {
+            cellFormat.Wrap = wrap;
+        }
+
         /// <summary>
         /// Устанавливает горизонтальное выравнивание для ячейки
         /// </summary>
@@ -58,6 +63,11 @@ namespace Pmi.Builders
         public void SetFontId(uint fontId)
         {
             cellFormat.FontId = fontId;
+        }
+
+        public void SetBorderId(uint borderId)
+        {
+            cellFormat.BorderId = borderId;
         }
 
         /// <summary>
