@@ -85,7 +85,6 @@
     <Compile Include="Model\Semester.cs" />
     <Compile Include="Builders\ExcelFontBuilder.cs" />
     <Compile Include="Directors\FontDirector.cs" />
-    <Compile Include="Service\Implimentation\JsonCacheService.cs" />
     <Compile Include="Service\Abstraction\CacheService.cs" />
     <Compile Include="Service\Implimentation\XmlCacheService.cs" />
     <Compile Include="ViewModel\BaseViewModel.cs" />

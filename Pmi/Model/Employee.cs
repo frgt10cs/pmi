@@ -18,6 +18,7 @@ namespace Pmi.Model
         public Semester AutumnSemester { get; set; }
         public Semester SpringSemester { get; set; }
 
+
         public Employee()
         {            
             AutumnSemester = new Semester();
@@ -39,14 +40,11 @@ namespace Pmi.Model
 
         public double LecturesForYear() => AutumnSemester.TotalForLectures() + SpringSemester.TotalForLectures();
         public double PracticalWorkForYear() => AutumnSemester.TotalForPracticalWork() + SpringSemester.TotalForPracticalWork();
-        public double LaboratoryWorkForYear() =>
-            AutumnSemester.TotalForLaboratoryWork() + SpringSemester.TotalForLaboratoryWork();
+        public double LaboratoryWorkForYear() => AutumnSemester.TotalForLaboratoryWork() + SpringSemester.TotalForLaboratoryWork();
 
-        public double ConsultationsByTheoryForYear() =>
-            AutumnSemester.TotalForConsultationsByTheory() + SpringSemester.TotalForConsultationsByTheory();
+        public double ConsultationsByTheoryForYear() => AutumnSemester.TotalForConsultationsByTheory() + SpringSemester.TotalForConsultationsByTheory();
 
-        public double ConsultationsByDiplomForYear() =>
-            AutumnSemester.TotalForConsultationsByDiplom() + SpringSemester.TotalForConsultationsByDiplom();
+        public double ConsultationsByDiplomForYear() => AutumnSemester.TotalForConsultationsByDiplom() + SpringSemester.TotalForConsultationsByDiplom();
 
         public double CourseworkForYear() => AutumnSemester.TotalForCoursework() + SpringSemester.TotalForCoursework();
         public double DiplomsForYear() => AutumnSemester.TotalForDiploms() + SpringSemester.TotalForDiploms();
@@ -60,6 +58,11 @@ namespace Pmi.Model
         public double Year()
         {
             return AutumnSemester.TotalForSemester() + SpringSemester.TotalForSemester();
+        }
+
+        public bool HasDisciplines()
+        {
+            return (AutumnSemester.Disciplines.Count + SpringSemester.Disciplines.Count) != 0;
         }
     }
 }

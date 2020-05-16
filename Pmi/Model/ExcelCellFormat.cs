@@ -23,7 +23,7 @@ namespace Pmi.Model
 
         public static implicit operator CellFormat(ExcelCellFormat excelCellFormat)
         {
-            return new CellFormat()
+            var format = new CellFormat()
             {
                 FontId = excelCellFormat.FontId,
                 BorderId = excelCellFormat.BorderId,
@@ -35,6 +35,8 @@ namespace Pmi.Model
                     WrapText = excelCellFormat.Wrap
                 }
             };
+
+            return format;
         }
     }
 }

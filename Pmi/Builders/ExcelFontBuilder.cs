@@ -22,13 +22,12 @@ namespace Pmi.Builders
         public void Reset()
         {
             font = new Font();
-            SetFontName(defaultFontName);
+            SetFontName();
         }
 
         /// <summary>
         /// Устаналивает размер шрифта
         /// </summary>
-        /// <param name="size"></param>
         public void SetFontSize(double size)
         {
             font.FontSize = new FontSize() { Val = size };
@@ -37,8 +36,7 @@ namespace Pmi.Builders
         /// <summary>
         /// Устанавливает тип шрифта
         /// </summary>
-        /// <param name="fontName"></param>
-        public void SetFontName(string fontName)
+        public void SetFontName(string fontName = defaultFontName)
         {
             font.FontName = new FontName() { Val = fontName };
         }
@@ -46,7 +44,6 @@ namespace Pmi.Builders
         /// <summary>
         /// Устаналивает цвет шрифта
         /// </summary>
-        /// <param name="hexValue"></param>
         public void SetColor(string hexValue)
         {
             font.Color = new Color() { Rgb = hexValue };
@@ -79,10 +76,9 @@ namespace Pmi.Builders
         /// <summary>
         /// Возвращает построенный шрифт
         /// </summary>
-        /// <returns></returns>
         public Font GetFont()
         {
-            Font font = this.font;
+            var font = this.font;
             Reset();
             return font;
         }

@@ -17,12 +17,39 @@ namespace Pmi.ViewModel
         private SettingsViewModel settingsViewModel;
         private LoadingViewModel loadingViewModel;
         private CacheService<List<EmployeeViewModel>> cacheService;
+        private RelayCommand openSettingsView;
 
         public ObservableCollection<EmployeeViewModel> Employees { get; set; } = new ObservableCollection<EmployeeViewModel>();
-        public int OpenedViewIndex { get { return openedViewIndex; } set { openedViewIndex = value; OnPropertyChanged("OpenedViewIndex"); } }
-        public BaseViewModel CurrentViewModel { get { return currentViewModel; } set { currentViewModel = value; OnPropertyChanged("CurrentViewModel"); } }
-        public string Icon { get { return icon; } set { icon = value; OnPropertyChanged("Icon"); } }
 
+        public int OpenedViewIndex {
+            get {
+                return openedViewIndex;
+            } 
+            set {
+                openedViewIndex = value;
+                OnPropertyChanged("OpenedViewIndex");
+            } 
+        }
+
+        public BaseViewModel CurrentViewModel {
+            get {
+                return currentViewModel;
+            } 
+            set {
+                currentViewModel = value;
+                OnPropertyChanged("CurrentViewModel");
+            } 
+        }
+
+        public string Icon {
+            get {
+                return icon;
+            } 
+            set {
+                icon = value;
+                OnPropertyChanged("Icon");
+            } 
+        }
 
         public MainViewModel(CacheService<List<EmployeeViewModel>> cacheServ, Excel cacheExcel)
         {
@@ -32,11 +59,7 @@ namespace Pmi.ViewModel
             string path = File.Exists(ConfigurationManager.AppSettings.Get("pathCache")) ? File.ReadAllText(ConfigurationManager.AppSettings.Get("pathCache")) : "";
             ConfigurationManager.AppSettings.Set("filePath", path);
 
-            if (cache == null)
-            {
-
-            }
-            else
+            if (cache != null)
             {
                 foreach (var employee in cache)
                 {
@@ -59,7 +82,6 @@ namespace Pmi.ViewModel
             CurrentViewModel = documentViewModel;
         }
 
-        private RelayCommand openSettingsView;
         public RelayCommand OpenSettingsView
         {
             get

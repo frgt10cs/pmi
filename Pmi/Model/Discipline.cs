@@ -35,7 +35,7 @@ namespace Pmi.Model
         {
             return Lectures + PracticalWork + LaboratoryWork + ConsultationsByTheory +
                 ConsultationsByDiplom + Coursework + Diploms + Practice + Tests +
-                Exam + Aspirants + GEK+ AnotherWork;
+                Exam + Aspirants + GEK + AnotherWork;
         }
     }
 }

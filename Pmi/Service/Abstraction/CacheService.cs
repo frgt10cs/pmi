@@ -12,20 +12,21 @@ namespace Pmi.Service.Abstraction
     {
         protected string filePath;                
 
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="filePath">Путь к файлу, в котором будет храниться кэш</param>
         public CacheService(string filePath)
         {
             if (!File.Exists(filePath))
+            {
                 File.Create(filePath);
+            }
             this.filePath = filePath;            
-        }           
+        }
+
         /// <summary>
         /// Записывает кэш в файл. Если кэш в файле уже есть, он будет переопределен.
         /// </summary>
         public abstract void Cache(T entity);
+
         /// <summary>
         /// Подгружает кэш из файла
         /// </summary>
@@ -34,8 +35,6 @@ namespace Pmi.Service.Abstraction
         /// <summary>
         /// Вычисляет хэш строки
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
         [Obsolete]
         private string GetHash(string value)
         {

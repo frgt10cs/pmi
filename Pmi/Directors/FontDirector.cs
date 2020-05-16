@@ -1,4 +1,5 @@
 ﻿using Pmi.Builders;
+using DocumentFormat.OpenXml.Spreadsheet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,7 +27,7 @@ namespace Pmi.Directors
         public void BuildYearFont()
         {
             fontBuilder.SetFontSize(13);
-            fontBuilder.AddUnderline(DocumentFormat.OpenXml.Spreadsheet.UnderlineValues.Single);
+            fontBuilder.AddUnderline(UnderlineValues.Single);
         }
 
         public void BuildEmployeeInfoMeta()
@@ -37,7 +38,7 @@ namespace Pmi.Directors
         public void BuildEmployeeInfo()
         {
             fontBuilder.SetFontSize(14);
-            fontBuilder.AddUnderline(DocumentFormat.OpenXml.Spreadsheet.UnderlineValues.Single);
+            fontBuilder.AddUnderline(UnderlineValues.Single);
         }
 
         public void BuildColumnName()
@@ -90,15 +91,18 @@ namespace Pmi.Directors
         {
             fontBuilder.SetFontSize(14);
         }
+
         public void BuildPosition()
         {
             fontBuilder.SetFontSize(14);
         }
+
         public void BuildDepatment()
         {
             fontBuilder.SetFontSize(14);
-            fontBuilder.AddUnderline(DocumentFormat.OpenXml.Spreadsheet.UnderlineValues.Single);
+            fontBuilder.AddUnderline(UnderlineValues.Single);
         }
+
         public void BuildManagerInfo()
         {
             fontBuilder.SetFontSize(12);
