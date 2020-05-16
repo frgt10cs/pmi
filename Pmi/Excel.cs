@@ -150,15 +150,7 @@ namespace Pmi
                             }
                             break;
                         case CellValues.Boolean:
-                            switch (value)
-                            {
-                                case "0":
-                                    value = "FALSE";
-                                    break;
-                                default:
-                                    value = "TRUE";
-                                    break;
-                            }
+                            value = value == "0" ? "FALSE" : "TRUE";
                             break;
                     }
                 }
@@ -248,15 +240,15 @@ namespace Pmi
             var excelCellFormats = cacheService.UploadCache();
             int firstId = Convert.ToInt32(excelCellFormats.First().Id);
             int lastId = Convert.ToInt32(excelCellFormats.Last().Id);
-            if (document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements.Count < lastId)
+            if (document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements.Count >= lastId)
             {
-            }
-            else if (AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[firstId] as CellFormat, excelCellFormats.First())
-                && AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[lastId] as CellFormat, excelCellFormats.Last()))
-            {
-                cellFormats = excelCellFormats;
-                return true;
-            }
+                if (AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[firstId] as CellFormat, excelCellFormats.First())
+                    && AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[lastId] as CellFormat, excelCellFormats.Last()))
+                {
+                    cellFormats = excelCellFormats;
+                    return true;
+                }
+            }          
             cellFormats = null;
             return false;
         }
