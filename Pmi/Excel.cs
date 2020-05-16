@@ -4,23 +4,16 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Pmi.Model;
 using Pmi.Builders;
 using Pmi.Directors;
-using Pmi.Service.Implimentation;
-using System.Configuration;
 using Pmi.Service.Abstraction;
-using System.Threading;
+using System.Globalization;
 
 namespace Pmi
-{                          
+{
     class Excel
     {
-        public event EventHandler OnProgressChanged;
-        public event EventHandler OnStatusChanged;
-
         class CellData
         {
             public string Column;
@@ -29,14 +22,15 @@ namespace Pmi
             public uint StyleIndex;
         }
 
-        CacheService<List<ExcelCellFormat>> cacheService;
+        public event EventHandler OnProgressChanged;
+        public event EventHandler OnStatusChanged;
+        private readonly string[] Column = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q" };
+        readonly CacheService<List<ExcelCellFormat>> cacheService;
 
         public Excel(CacheService<List<ExcelCellFormat>> cacheService)
         {
             this.cacheService = cacheService;
         }
-
-        private string[] Column = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q" };
 
         private Cell InsertCellInWorksheet(string columnName, uint rowIndex, WorksheetPart worksheetPart)
         {
@@ -44,34 +38,28 @@ namespace Pmi
             SheetData sheetData = worksheet.GetFirstChild<SheetData>();
             string cellReference = columnName + rowIndex;
 
-            Row row;
-            if (sheetData.Elements<Row>().Where(r => r.RowIndex == rowIndex).Count() != 0)
+            var row = sheetData.Elements<Row>().Where(r => r.RowIndex == rowIndex).FirstOrDefault();
+            if (row == null)
             {
-                row = sheetData.Elements<Row>().Where(r => r.RowIndex == rowIndex).First();
-            }
-            else
-            {
-                row = new Row() { RowIndex = rowIndex };
+                row = new Row() {
+                    RowIndex = rowIndex
+                };
                 sheetData.Append(row);
             }
 
-            if (row.Elements<Cell>().Where(c => c.CellReference.Value == columnName + rowIndex).Count() > 0)
+            var cells = row.Elements<Cell>();
+
+            if (cells.Where(c => c.CellReference.Value == columnName + rowIndex).Count() > 0)
             {
-                return row.Elements<Cell>().Where(c => c.CellReference.Value == cellReference).First();
+                return cells.Where(c => c.CellReference.Value == cellReference).First();
             }
             else
             {
-                Cell refCell = null;
-                foreach (Cell cell in row.Elements<Cell>())
-                {
-                    if (string.Compare(cell.CellReference.Value, cellReference, true) > 0)
-                    {
-                        refCell = cell;
-                        break;
-                    }
-                }
+                var refCell = cells.FirstOrDefault(cell => string.Compare(cell.CellReference.Value, cellReference, true) > 0);
 
-                Cell newCell = new Cell() { CellReference = cellReference };
+                var newCell = new Cell() {
+                    CellReference = cellReference 
+                };
                 row.InsertBefore(newCell, refCell);
 
                 worksheet.Save();
@@ -86,47 +74,34 @@ namespace Pmi
                 shareStringPart.SharedStringTable = new SharedStringTable();
             }
 
-            int i = 0;
+            int pos = shareStringPart.SharedStringTable.Elements<SharedStringItem>().ToList().FindIndex(i => i.InnerText == text);
 
-            foreach (SharedStringItem item in shareStringPart.SharedStringTable.Elements<SharedStringItem>())
-            {
-                if (item.InnerText == text)
-                {
-                    return i;
-                }
-
-                i++;
-            }
-
-            shareStringPart.SharedStringTable.AppendChild(new SharedStringItem(new DocumentFormat.OpenXml.Spreadsheet.Text(text)));
+            shareStringPart.SharedStringTable.AppendChild(new SharedStringItem(new Text(text)));
             shareStringPart.SharedStringTable.Save();
 
-            return i;
+            return pos;
         }
 
         private WorksheetPart GetSheet(WorkbookPart workbookPart, string nameSheet)
         {
-            Sheets sheets = workbookPart.Workbook.GetFirstChild<Sheets>();
-            int count = 0;
-            foreach (var ItemSheets in sheets.Elements<Sheet>())
-            {
-                if (ItemSheets.Name.Value.Contains(nameSheet))
-                {
-                    count++;
-                }
-            }
+            var sheets = workbookPart.Workbook.GetFirstChild<Sheets>();
+            var count = sheets.Elements<Sheet>().Count(i => i.Name.Value.Contains(nameSheet));
 
-            WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+            var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
             worksheetPart.Worksheet = new Worksheet(new SheetData());
 
-            string relationshipId = workbookPart.GetIdOfPart(worksheetPart);
+            var relationshipId = workbookPart.GetIdOfPart(worksheetPart);
 
             uint sheetId = 1;
             if (sheets.Elements<Sheet>().Count() > 0)
             {
                 sheetId = sheets.Elements<Sheet>().Select(s => s.SheetId.Value).Max() + 1;
             }
-            Sheet sheet = new Sheet() { Id = relationshipId, SheetId = sheetId, Name = nameSheet + " " + count.ToString() };
+            var sheet = new Sheet() {
+                Id = relationshipId,
+                SheetId = sheetId,
+                Name = nameSheet + " " + count.ToString()
+            };
             sheets.Append(sheet);
             return worksheetPart;
         }
@@ -213,9 +188,13 @@ namespace Pmi
 
             // вынести в отдельный метод?
             #region генерация стилей для страниц
-            ExcelStylesheetBuilder builder = new ExcelStylesheetBuilder((uint)styleSheet.Fonts.ChildElements.Count,
-                (uint)styleSheet.CellFormats.ChildElements.Count, (uint)styleSheet.Borders.ChildElements.Count);
-            ExcelStylesheetDirector director = new ExcelStylesheetDirector() { StylesheetBuilder = builder };
+            var builder = new ExcelStylesheetBuilder(
+                (uint)styleSheet.Fonts.ChildElements.Count,
+                (uint)styleSheet.CellFormats.ChildElements.Count,
+                (uint)styleSheet.Borders.ChildElements.Count);
+            var director = new ExcelStylesheetDirector() {
+                StylesheetBuilder = builder 
+            };
 
             director.BuildReportStylesheet();
             var reportStylesheet = builder.GetStylesheet();
@@ -248,11 +227,11 @@ namespace Pmi
             var excelCellFormats = cacheService.UploadCache();
             int firstId = Convert.ToInt32(excelCellFormats.First().Id);
             int lastId = Convert.ToInt32(excelCellFormats.Last().Id);
-            if (document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements.Count < lastId)
-            {
-            }
-            else if (AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[firstId] as CellFormat, excelCellFormats.First())
-                && AreCellFormatEquals(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements[lastId] as CellFormat, excelCellFormats.Last()))
+            var children = document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ChildElements;
+
+            if (children.Count > lastId &&
+                AreCellFormatEquals(children[firstId] as CellFormat, excelCellFormats.First()) &&
+                AreCellFormatEquals(children[lastId] as CellFormat, excelCellFormats.Last()))
             {
                 cellFormats = excelCellFormats;
                 return true;
@@ -268,7 +247,7 @@ namespace Pmi
         /// <param name="employee"> Преподаватель</param>
         /// <param name="year"> Учебный год</param>
         /// <returns> Преподаватель</returns>
-        public Employee GetEmployee(string path, Employee employee, string year)
+        public Employee GetEmployee(string path, Employee employee)
         {
             OnProgressChanged?.Invoke(0, null);
             OnStatusChanged?.Invoke("Сбор данных: ", null);
@@ -284,11 +263,12 @@ namespace Pmi
                     shareStringPart = doc.WorkbookPart.AddNewPart<SharedStringTablePart>();
                 }
 
-                Sheet Sheet1 = doc.WorkbookPart.Workbook.Descendants<Sheet>().Where(s => s.Name == "Лист1").FirstOrDefault();
-                Sheet Sheet2 = doc.WorkbookPart.Workbook.Descendants<Sheet>().Where(s => s.Name == "Лист2").FirstOrDefault();
-                Sheet SheetDipl = doc.WorkbookPart.Workbook.Descendants<Sheet>().Where(s => s.Name == "Дипл исх данные").FirstOrDefault();
-                Sheet SheetPrac = doc.WorkbookPart.Workbook.Descendants<Sheet>().Where(s => s.Name == "Рук-ли практики  бак").FirstOrDefault();
-                Sheet SheetPracMag = doc.WorkbookPart.Workbook.Descendants<Sheet>().Where(s => s.Name == "Рук-ли практики маг ").FirstOrDefault();
+                var sheet = doc.WorkbookPart.Workbook.Descendants<Sheet>();
+                Sheet Sheet1 = sheet.Where(s => s.Name == "Лист1").FirstOrDefault();
+                Sheet Sheet2 = sheet.Where(s => s.Name == "Лист2").FirstOrDefault();
+                Sheet SheetDipl = sheet.Where(s => s.Name == "Дипл исх данные").FirstOrDefault();
+                Sheet SheetPrac = sheet.Where(s => s.Name == "Рук-ли практики  бак").FirstOrDefault();
+                Sheet SheetPracMag = sheet.Where(s => s.Name == "Рук-ли практики маг ").FirstOrDefault();
                 if (Sheet1 == null || Sheet2 == null || SheetDipl == null)
                 {
                     return null;
@@ -308,14 +288,16 @@ namespace Pmi
                     string labEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "U" + row.ToString());
                     if (lekEmployee.Contains(employee.LastName) || prcEmployee.Contains(employee.LastName) || labEmployee.Contains(employee.LastName))
                     {
-                        Discipline discipline = new Discipline(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()));
-                        discipline.Groups = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString()).Split('\n').ToList();
-                        discipline.CodeOP = "";
+                        var discipline = new Discipline(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()))
+                        {
+                            Groups = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString()).Split('\n').ToList(),
+                            CodeOP = ""
+                        };
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "M" + row.ToString()) != "0" &&
                             lekEmployee.Contains(employee.LastName))
                         {
-                            discipline.Lectures = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "N" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
-                            discipline.ConsultationsByTheory = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "V" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                            discipline.Lectures = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "N" + row.ToString()), CultureInfo.InvariantCulture);
+                            discipline.ConsultationsByTheory = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "V" + row.ToString()), CultureInfo.InvariantCulture);
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "P" + row.ToString()) != "0" &&
                             prcEmployee.Contains(employee.LastName))
@@ -326,7 +308,7 @@ namespace Pmi
                             }
                             else
                             {
-                                discipline.PracticalWork = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "Q" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                                discipline.PracticalWork = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "Q" + row.ToString()), CultureInfo.InvariantCulture);
                             }
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "S" + row.ToString()) != "0" &&
@@ -338,7 +320,7 @@ namespace Pmi
                             }
                             else
                             {
-                                discipline.LaboratoryWork = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "T" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                                discipline.LaboratoryWork = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "T" + row.ToString()), CultureInfo.InvariantCulture);
                             }
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "W" + row.ToString()) != "0" &&
@@ -349,12 +331,12 @@ namespace Pmi
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AL" + row.ToString()) != "0" &&
                             GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AN" + row.ToString()).Contains(employee.LastName))
                         {
-                            discipline.Tests = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AM" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                            discipline.Tests = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AM" + row.ToString()), CultureInfo.InvariantCulture);
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AO" + row.ToString()) != "0" &&
                             GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AQ" + row.ToString()).Contains(employee.LastName))
                         {
-                            discipline.Exam = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AP" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                            discipline.Exam = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AP" + row.ToString()), CultureInfo.InvariantCulture);
                         }
                         employee.SpringSemester.Disciplines.Add(discipline);
                     }
@@ -371,8 +353,8 @@ namespace Pmi
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AU" + row.ToString()) != "0" &&
                             lekEmployee.Contains(employee.LastName))
                         {
-                            discipline.Lectures = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AV" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
-                            discipline.ConsultationsByTheory = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BD" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                            discipline.Lectures = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AV" + row.ToString()), CultureInfo.InvariantCulture);
+                            discipline.ConsultationsByTheory = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BD" + row.ToString()), CultureInfo.InvariantCulture);
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AX" + row.ToString()) != "0" &&
                             prcEmployee.Contains(employee.LastName))
@@ -383,7 +365,7 @@ namespace Pmi
                             }
                             else
                             {
-                                discipline.PracticalWork = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AY" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                                discipline.PracticalWork = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AY" + row.ToString()), CultureInfo.InvariantCulture);
                             }
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BA" + row.ToString()) != "0" &&
@@ -395,7 +377,7 @@ namespace Pmi
                             }
                             else
                             {
-                                discipline.LaboratoryWork = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BB" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                                discipline.LaboratoryWork = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BB" + row.ToString()), CultureInfo.InvariantCulture);
                             }
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BE" + row.ToString()) != "0" &&
@@ -406,12 +388,12 @@ namespace Pmi
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BT" + row.ToString()) != "0" &&
                             GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BV" + row.ToString()).Contains(employee.LastName))
                         {
-                            discipline.Tests = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BU" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                            discipline.Tests = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BU" + row.ToString()), CultureInfo.InvariantCulture);
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BW" + row.ToString()) != "0" &&
                             GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BY" + row.ToString()).Contains(employee.LastName))
                         {
-                            discipline.Exam = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BX" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                            discipline.Exam = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BX" + row.ToString()), CultureInfo.InvariantCulture);
                         }
                         employee.AutumnSemester.Disciplines.Add(discipline);
                     }
@@ -436,19 +418,19 @@ namespace Pmi
                 {
                     if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()).Contains(employee.LastName))
                     {
-                        bachelor.Diploms = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "L" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                        bachelor.Diploms = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "L" + row.ToString()), CultureInfo.InvariantCulture);
                         if (bachelor.Diploms != 0) { employee.AutumnSemester.Disciplines.Add(bachelor); }
-                        magister.Diploms = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "O" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                        magister.Diploms = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "O" + row.ToString()), CultureInfo.InvariantCulture);
                         if (magister.Diploms != 0) { employee.AutumnSemester.Disciplines.Add(magister); }
-                        diplPro.ConsultationsByDiplom = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BF" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                        diplPro.ConsultationsByDiplom = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BF" + row.ToString()), CultureInfo.InvariantCulture);
                         if (diplPro.ConsultationsByDiplom != 0) { employee.AutumnSemester.Disciplines.Add(diplPro); }
-                        anotherWork.AnotherWork = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BG" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                        anotherWork.AnotherWork = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BG" + row.ToString()), CultureInfo.InvariantCulture);
                         if (anotherWork.AnotherWork != 0) { employee.AutumnSemester.Disciplines.Add(anotherWork); }
-                        aspirants.Aspirants = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "P" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                        aspirants.Aspirants = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "P" + row.ToString()), CultureInfo.InvariantCulture);
                         if (aspirants.Aspirants != 0) { employee.AutumnSemester.Disciplines.Add(aspirants); }
-                        gekB.GEK = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "N" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                        gekB.GEK = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "N" + row.ToString()), CultureInfo.InvariantCulture);
                         if (gekB.GEK != 0) { employee.AutumnSemester.Disciplines.Add(gekB); }
-                        gekM.GEK = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "M" + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                        gekM.GEK = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "M" + row.ToString()), CultureInfo.InvariantCulture);
                         if (gekM.GEK != 0) { employee.AutumnSemester.Disciplines.Add(gekM); }
                     }
                     row++;
@@ -502,7 +484,7 @@ namespace Pmi
                                     }
                                     CanAdd = false;
                                 }
-                                prac.PracticalWork += double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, (j == 1 ? "K" : "L") + row.ToString()), System.Globalization.CultureInfo.InvariantCulture);
+                                prac.PracticalWork += double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, (j == 1 ? "K" : "L") + row.ToString()), CultureInfo.InvariantCulture);
                                 string code = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "D" + row.ToString());
                                 bool found = false;
                                 for (int i = 0; i < prac.Groups.Count; i++)
@@ -539,10 +521,10 @@ namespace Pmi
         /// <param name="worksheetPart"> Часть страницы</param>
         /// <param name="shareStringPart"> Таблица строк</param>
         /// <param name="cellFormats"> Стили ячеек</param>
-        private void CreateRaport(Employee employee, WorksheetPart worksheetPart, SharedStringTablePart shareStringPart
-            , List<ExcelCellFormat> cellFormats)
+        private void CreateRaport(Employee employee, WorksheetPart worksheetPart, SharedStringTablePart shareStringPart,
+            List<ExcelCellFormat> cellFormats)
         {
-            System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
+            System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             
             OnStatusChanged?.Invoke("Создаётся структура документа", null);
             #region Создание ширины столбцов и соединений ячеек
@@ -1083,7 +1065,7 @@ namespace Pmi
                 Fills = new Fills(),
                 CellFormats = new CellFormats()
             };
-            ExcelStylesheetBuilder builder = new ExcelStylesheetBuilder(0, 0,0);
+            ExcelStylesheetBuilder builder = new ExcelStylesheetBuilder(0, 0, 0);
             ExcelStylesheetDirector director = new ExcelStylesheetDirector() { StylesheetBuilder = builder };
             director.BuildReportStylesheet();
             var reportStylesheet = builder.GetStylesheet();
@@ -1111,8 +1093,7 @@ namespace Pmi
                 OnProgressChanged?.Invoke(6, null);
                 
                 OnStatusChanged?.Invoke("Загружается документ", null);
-                List<ExcelCellFormat> cellFormats = null;
-                if (!AreIndexesSame(doc, out cellFormats))
+                if (!AreIndexesSame(doc, out List<ExcelCellFormat> cellFormats))
                 {
                     InitStyles(doc, out cellFormats);
                 }

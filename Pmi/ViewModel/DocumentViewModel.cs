@@ -127,7 +127,7 @@ namespace Pmi.ViewModel
                 }
 
                 OpenLoadingView.Execute(null);
-                var employee = excel.GetEmployee(filePath, new Employee(selectedEmployee), Year);
+                var employee = excel.GetEmployee(filePath, new Employee(selectedEmployee));
                 if (!employee.HasDisciplines())
                 {
                     // Employee not found
@@ -163,7 +163,7 @@ namespace Pmi.ViewModel
                 }
 
                 OpenLoadingView.Execute(null);
-                var employee = excel.GetEmployee(filePath, new Employee(selectedEmployee), Year);
+                var employee = excel.GetEmployee(filePath, new Employee(selectedEmployee));
                 if (!employee.HasDisciplines())
                 { 
                     // Employee not found

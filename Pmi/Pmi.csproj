@@ -78,6 +78,7 @@
     <Compile Include="Directors\ExcelStylesheetDirector.cs" />
     <Compile Include="Model\Discipline.cs" />
     <Compile Include="Model\Employee.cs" />
+    <Compile Include="Service\Implimentation\JsonCacheService.cs" />
     <Compile Include="ViewModel\EmployeeViewModel.cs" />
     <Compile Include="Model\ExcelCellFormat.cs" />
     <Compile Include="Model\ExcelStylesheet.cs" />
