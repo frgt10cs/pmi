@@ -76,9 +76,6 @@
     <Compile Include="Directors\BorderDirector.cs" />
     <Compile Include="Directors\ExcelCellFormatDirector.cs" />
     <Compile Include="Directors\ExcelStylesheetDirector.cs" />
-    <Compile Include="LoadingWindow.xaml.cs">
-      <DependentUpon>LoadingWindow.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Model\Discipline.cs" />
     <Compile Include="Model\Employee.cs" />
     <Compile Include="ViewModel\EmployeeViewModel.cs" />

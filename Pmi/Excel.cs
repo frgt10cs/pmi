@@ -214,7 +214,7 @@ namespace Pmi
             // вынести в отдельный метод?
             #region генерация стилей для страниц
             ExcelStylesheetBuilder builder = new ExcelStylesheetBuilder((uint)styleSheet.Fonts.ChildElements.Count,
-                (uint)styleSheet.CellFormats.ChildElements.Count);
+                (uint)styleSheet.CellFormats.ChildElements.Count, (uint)styleSheet.Borders.ChildElements.Count);
             ExcelStylesheetDirector director = new ExcelStylesheetDirector() { StylesheetBuilder = builder };
 
             director.BuildReportStylesheet();

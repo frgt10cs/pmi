@@ -2,19 +2,8 @@
 using Pmi.Service.Abstraction;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-<<<<<<< HEAD
 using System.Configuration;
 using System.IO;
-=======
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using Pmi.Model;
-using Pmi.Service.Abstraction;
->>>>>>> newFonts
 
 namespace Pmi.ViewModel
 {
@@ -30,8 +19,8 @@ namespace Pmi.ViewModel
         private CacheService<List<EmployeeViewModel>> cacheService;
 
         public ObservableCollection<EmployeeViewModel> Employees { get; set; } = new ObservableCollection<EmployeeViewModel>();
-        public int OpenedViewIndex { get { return openedViewIndex; } set { openedViewIndex = value; OnPropertyChanged("OpenedViewIndex");} }
-        public BaseViewModel CurrentViewModel { get { return currentViewModel; } set { currentViewModel = value; OnPropertyChanged("CurrentViewModel"); } }        
+        public int OpenedViewIndex { get { return openedViewIndex; } set { openedViewIndex = value; OnPropertyChanged("OpenedViewIndex"); } }
+        public BaseViewModel CurrentViewModel { get { return currentViewModel; } set { currentViewModel = value; OnPropertyChanged("CurrentViewModel"); } }
         public string Icon { get { return icon; } set { icon = value; OnPropertyChanged("Icon"); } }
 
 
@@ -42,7 +31,7 @@ namespace Pmi.ViewModel
             var cache = cacheServ.UploadCache();
             string path = File.Exists(ConfigurationManager.AppSettings.Get("pathCache")) ? File.ReadAllText(ConfigurationManager.AppSettings.Get("pathCache")) : "";
             ConfigurationManager.AppSettings.Set("filePath", path);
-            
+
             if (cache == null)
             {
 
@@ -54,7 +43,7 @@ namespace Pmi.ViewModel
                     Employees.Add(employee);
                 }
             }
-            
+
             documentViewModel = new DocumentViewModel(Employees, cacheExcel, new RelayCommand(obj =>
             {
                 OpenedViewIndex = 2;
@@ -75,14 +64,13 @@ namespace Pmi.ViewModel
         {
             get
             {
-<<<<<<< HEAD
                 return openSettingsView ?? (openSettingsView = new RelayCommand(obj =>
                 {
                     if (CurrentViewModel == documentViewModel)
                     {
                         Icon = "←";
                         OpenedViewIndex = 1;
-                        CurrentViewModel = settingsViewModel;                        
+                        CurrentViewModel = settingsViewModel;
                     }
                     else
                     {
@@ -99,15 +87,5 @@ namespace Pmi.ViewModel
                 }));
             }
         }
-=======
-                var LoadVM = new LoadingViewModel();
-                var Load = new LoadingWindow();
-                Load.DataContext = LoadVM;
-                LoadVM.OnRequestClose += (s, e) => Load.Close();
-                Load.ShowDialog();
-            },
-            _obj => selectedEmployee != null && selectedMode != null );
-        }                   
->>>>>>> newFonts
     }
 }
