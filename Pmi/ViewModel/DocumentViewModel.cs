@@ -28,53 +28,29 @@ namespace Pmi.ViewModel
 
         public ObservableCollection<string> ReportModes { get; set; } = new ObservableCollection<string>();
 
-        public EmployeeViewModel SelectedEmployee {
-            get {
-                return selectedEmployee;
-            }
-            set { 
-                selectedEmployee = value;
-                OnPropertyChanged("SelectedEmployee"); 
-            } 
+        public EmployeeViewModel SelectedEmployee
+        {
+            get => selectedEmployee;
+            set { selectedEmployee = value; OnPropertyChanged("SelectedEmployee"); }
         }
 
-        public string Year {
-            get {
-                return year; 
-            } 
-            set {
-                year = value;
-                OnPropertyChanged("Year");
-            } 
+        public string Year
+        {
+            get => year;
+            set { year = value; OnPropertyChanged("Year"); }
         }
 
-        public string SelectedMode {
-            get {
-                return selectedMode; 
-            } 
-            set {
-                selectedMode = value;
-                OnPropertyChanged("SelectedMode"); 
-            } 
+        public string SelectedMode
+        {
+            get => selectedMode;
+            set { selectedMode = value; OnPropertyChanged("SelectedMode"); }
         }
 
-        public RelayCommand CreateReport {
-            get {
-                return createReport; 
-            } 
-        }
+        public RelayCommand CreateReport => createReport;
 
-        public RelayCommand OpenLoadingView {
-            get {
-                return openLoadingView; 
-            } 
-        }
+        public RelayCommand OpenLoadingView => openLoadingView;
 
-        public RelayCommand CloseLoadingView {
-            get {
-                return closeLoadingView; 
-            } 
-        }
+        public RelayCommand CloseLoadingView => closeLoadingView;
 
         public DocumentViewModel(ObservableCollection<EmployeeViewModel> cacheEmployee, Excel cacheExcel, RelayCommand open, RelayCommand close)
         {
@@ -104,10 +80,7 @@ namespace Pmi.ViewModel
             closeLoadingView = close;
         }
 
-        public bool IsYear()
-        {
-            return yearRegex.Match(year).Success;
-        }
+        public bool IsYear() => yearRegex.Match(year).Success;
 
         private async void ExecuteRaportSeparate()
         {

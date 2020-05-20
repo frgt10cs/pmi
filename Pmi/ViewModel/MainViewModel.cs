@@ -13,42 +13,30 @@ namespace Pmi.ViewModel
         private int openedViewIndex;
         private BaseViewModel currentViewModel;
         private string icon;
-        private DocumentViewModel documentViewModel;
-        private SettingsViewModel settingsViewModel;
-        private LoadingViewModel loadingViewModel;
-        private CacheService<List<EmployeeViewModel>> cacheService;
+        private readonly DocumentViewModel documentViewModel;
+        private readonly SettingsViewModel settingsViewModel;
+        private readonly LoadingViewModel loadingViewModel;
+        private readonly CacheService<List<EmployeeViewModel>> cacheService;
         private RelayCommand openSettingsView;
 
         public ObservableCollection<EmployeeViewModel> Employees { get; set; } = new ObservableCollection<EmployeeViewModel>();
 
-        public int OpenedViewIndex {
-            get {
-                return openedViewIndex;
-            } 
-            set {
-                openedViewIndex = value;
-                OnPropertyChanged("OpenedViewIndex");
-            } 
+        public int OpenedViewIndex
+        {
+            get => openedViewIndex;
+            set { openedViewIndex = value; OnPropertyChanged("OpenedViewIndex"); }
         }
 
-        public BaseViewModel CurrentViewModel {
-            get {
-                return currentViewModel;
-            } 
-            set {
-                currentViewModel = value;
-                OnPropertyChanged("CurrentViewModel");
-            } 
+        public BaseViewModel CurrentViewModel
+        {
+            get => currentViewModel;
+            set { currentViewModel = value; OnPropertyChanged("CurrentViewModel"); }
         }
 
-        public string Icon {
-            get {
-                return icon;
-            } 
-            set {
-                icon = value;
-                OnPropertyChanged("Icon");
-            } 
+        public string Icon
+        {
+            get => icon;
+            set { icon = value; OnPropertyChanged("Icon");}
         }
 
         public MainViewModel(CacheService<List<EmployeeViewModel>> cacheServ, Excel cacheExcel)

@@ -1,17 +1,12 @@
 ﻿using Pmi.Builders;
 using DocumentFormat.OpenXml.Spreadsheet;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pmi.Directors
 {
     class FontDirector
     {
         private ExcelFontBuilder fontBuilder;
-        public ExcelFontBuilder FontBuilder { set { fontBuilder = value; } }
+        public ExcelFontBuilder FontBuilder { set => fontBuilder = value; }
 
         public void BuildUniversityInfoFont()
         {

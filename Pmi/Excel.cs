@@ -38,7 +38,7 @@ namespace Pmi
             SheetData sheetData = worksheet.GetFirstChild<SheetData>();
             string cellReference = columnName + rowIndex;
 
-            var row = sheetData.Elements<Row>().Where(r => r.RowIndex == rowIndex).FirstOrDefault();
+            var row = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex == rowIndex);
             if (row == null)
             {
                 row = new Row() {
@@ -51,7 +51,7 @@ namespace Pmi
 
             if (cells.Where(c => c.CellReference.Value == columnName + rowIndex).Count() > 0)
             {
-                return cells.Where(c => c.CellReference.Value == cellReference).First();
+                return cells.First(c => c.CellReference.Value == cellReference);
             }
             else
             {
@@ -109,7 +109,7 @@ namespace Pmi
         private string GetCellValue(Worksheet worksheet, WorkbookPart workbookPart, string nameCell)
         {
             string value = "0";
-            Cell theCell = worksheet.Descendants<Cell>().Where(c => c.CellReference == nameCell).FirstOrDefault();
+            Cell theCell = worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == nameCell);
             if (theCell != null && theCell.InnerText.Length > 0)
             {
                 value = theCell.CellValue != null ? theCell.CellValue.InnerText : theCell.InnerText;
@@ -264,11 +264,11 @@ namespace Pmi
                 }
 
                 var sheet = doc.WorkbookPart.Workbook.Descendants<Sheet>();
-                Sheet Sheet1 = sheet.Where(s => s.Name == "Лист1").FirstOrDefault();
-                Sheet Sheet2 = sheet.Where(s => s.Name == "Лист2").FirstOrDefault();
-                Sheet SheetDipl = sheet.Where(s => s.Name == "Дипл исх данные").FirstOrDefault();
-                Sheet SheetPrac = sheet.Where(s => s.Name == "Рук-ли практики  бак").FirstOrDefault();
-                Sheet SheetPracMag = sheet.Where(s => s.Name == "Рук-ли практики маг ").FirstOrDefault();
+                Sheet Sheet1 = sheet.FirstOrDefault(s => s.Name == "Лист1");
+                Sheet Sheet2 = sheet.FirstOrDefault(s => s.Name == "Лист2");
+                Sheet SheetDipl = sheet.FirstOrDefault(s => s.Name == "Дипл исх данные");
+                Sheet SheetPrac = sheet.FirstOrDefault(s => s.Name == "Рук-ли практики  бак");
+                Sheet SheetPracMag = sheet.FirstOrDefault(s => s.Name == "Рук-ли практики маг ");
                 if (Sheet1 == null || Sheet2 == null || SheetDipl == null)
                 {
                     return null;

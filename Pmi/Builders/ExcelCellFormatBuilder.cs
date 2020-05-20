@@ -1,7 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
 using Pmi.Model;
 
-
 namespace Pmi.Builders
 {
     /// <summary>

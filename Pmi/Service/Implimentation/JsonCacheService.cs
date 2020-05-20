@@ -11,7 +11,6 @@ namespace Pmi.Service.Implimentation
     {
         public JsonCacheService(string path) : base(path)
         {
-
         }
 
         public override T UploadCache()

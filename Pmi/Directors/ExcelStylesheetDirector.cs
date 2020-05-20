@@ -1,10 +1,4 @@
 ﻿using Pmi.Builders;
-using Pmi.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 public enum ExcelCellFormats
 {
@@ -35,7 +29,7 @@ namespace Pmi.Directors
     public class ExcelStylesheetDirector
     {
         private ExcelStylesheetBuilder stylesheetBuilder;
-        public ExcelStylesheetBuilder StylesheetBuilder { set { stylesheetBuilder = value; } }
+        public ExcelStylesheetBuilder StylesheetBuilder { set => stylesheetBuilder = value; }
         private readonly FontDirector fontDirector;
         private readonly ExcelFontBuilder fontBuilder;
         private readonly ExcelCellFormatBuilder cellFormatBuilder;

@@ -12,24 +12,16 @@ namespace Pmi.ViewModel
         private string status;
         private uint progress;
 
-        public string Status {
-            get {
-                return status; 
-            } 
-            set {
-                status = value;
-                OnPropertyChanged("Status");
-            } 
+        public string Status
+        {
+            get => status;
+            set { status = value; OnPropertyChanged("Status"); }
         }
 
-        public uint Progress {
-            get {
-                return progress; 
-            } 
-            set {
-                progress = value;
-                OnPropertyChanged("Progress");
-            } 
+        public uint Progress
+        {
+            get => progress;
+            set { progress = value; OnPropertyChanged("Progress"); }
         }
 
         public LoadingViewModel(Excel excel)
