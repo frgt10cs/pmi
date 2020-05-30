@@ -1,9 +1,4 @@
 ﻿using Pmi.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace Pmi.Directors
@@ -11,7 +6,7 @@ namespace Pmi.Directors
     public class ExcelCellFormatDirector
     {
         private ExcelCellFormatBuilder builder;
-        public ExcelCellFormatBuilder CellFormatBuilder { set { builder = value; } }
+        public ExcelCellFormatBuilder CellFormatBuilder { set => builder = value; }
 
         public ExcelCellFormatDirector()
         {

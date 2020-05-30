@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -13,22 +14,43 @@ namespace Pmi.ViewModel
 {
     class DocumentViewModel:BaseViewModel
     {
-        private Excel excel;
+        private readonly Excel excel;
         private EmployeeViewModel selectedEmployee;
         private string year = "";
         private string selectedMode;
+        private readonly Regex yearRegex = new Regex(@"[0-9]{4}/[0-9]{4}");
         private RelayCommand createReport;
         private RelayCommand openLoadingView;
         private RelayCommand closeLoadingView;
 
+
         public ObservableCollection<EmployeeViewModel> Employees { get; set; } = new ObservableCollection<EmployeeViewModel>();
+
         public ObservableCollection<string> ReportModes { get; set; } = new ObservableCollection<string>();
-        public EmployeeViewModel SelectedEmployee { get { return selectedEmployee; } set { selectedEmployee = value; OnPropertyChanged("SelectedEmployee"); } }
-        public string Year { get { return year; } set { year = value; OnPropertyChanged("Year"); } }
-        public string SelectedMode { get { return selectedMode; } set { selectedMode = value; OnPropertyChanged("SelectedMode"); } }
-        public RelayCommand CreateReport { get { return createReport; } }
-        public RelayCommand OpenLoadingView { get { return openLoadingView; } }
-        public RelayCommand CloseLoadingView { get { return closeLoadingView; } }
+
+        public EmployeeViewModel SelectedEmployee
+        {
+            get => selectedEmployee;
+            set { selectedEmployee = value; OnPropertyChanged("SelectedEmployee"); }
+        }
+
+        public string Year
+        {
+            get => year;
+            set { year = value; OnPropertyChanged("Year"); }
+        }
+
+        public string SelectedMode
+        {
+            get => selectedMode;
+            set { selectedMode = value; OnPropertyChanged("SelectedMode"); }
+        }
+
+        public RelayCommand CreateReport => createReport;
+
+        public RelayCommand OpenLoadingView => openLoadingView;
+
+        public RelayCommand CloseLoadingView => closeLoadingView;
 
         public DocumentViewModel(ObservableCollection<EmployeeViewModel> cacheEmployee, Excel cacheExcel, RelayCommand open, RelayCommand close)
         {
@@ -50,59 +72,50 @@ namespace Pmi.ViewModel
                 {
                     ExecuteRaportSeparate();
                 }
-                
             },
-            _obj => selectedEmployee != null && selectedMode != null && IsYear());
+            _obj => selectedEmployee != null && selectedMode != null && IsYear()
+            );
 
             openLoadingView = open;
             closeLoadingView = close;
         }
 
-        public bool IsYear()
-        {
-            Regex regex = new Regex(@"[0-9]{4}/[0-9]{4}");
-            return regex.Match(year).Success;
-        }
+        public bool IsYear() => yearRegex.Match(year).Success;
 
         private async void ExecuteRaportSeparate()
         {
             await Task.Run(() =>
             {
-                if (ConfigurationManager.AppSettings.Get("filePath") != "")
-                {
-                    if (File.Exists(ConfigurationManager.AppSettings.Get("filePath")))
-                    {
-                        OpenLoadingView.Execute(null);
-                        var employee = excel.GetEmployee(ConfigurationManager.AppSettings.Get("filePath"), new Employee(selectedEmployee), Year);
-                        if (employee.AutumnSemester.Disciplines.Count != 0 || employee.SpringSemester.Disciplines.Count != 0)
-                        {
-                            string path = ConfigurationManager.AppSettings.Get("filePath");
-                            for (int i = path.Length - 1; i > 0; i--)
-                            {
-                                if (path[i] == '\\')
-                                {
-                                    path = path.Substring(0, i);
-                                    break;
-                                }
-                            }
-                            path += "\\" + SelectedEmployee.FIO + ".xlsx";
-                            excel.CreateRaportSeparate(path, employee);
-                        }
-                        else
-                        {
-                            // Employee not found
-                        }
-                        CloseLoadingView.Execute(null);
-                    }
-                    else
-                    {
-                        // Error: file not found
-                    }
-                }
-                else
+                var filePath = ConfigurationManager.AppSettings.Get("filePath");
+
+                if (filePath.Length == 0)
                 {
                     // Error: file path not found
+                    return;
                 }
+                if (!File.Exists(filePath))
+                {
+                    // Error: file not found
+                    return;
+                }
+
+                OpenLoadingView.Execute(null);
+                var employee = excel.GetEmployee(filePath, new Employee(selectedEmployee));
+                if (!employee.HasDisciplines())
+                {
+                    // Employee not found
+                    return;
+                }
+
+                var rightSlashPos = filePath.LastIndexOf('\\');
+                if (rightSlashPos != -1)
+                {
+                    filePath = filePath.Substring(0, rightSlashPos);
+                }
+                filePath += $"\\{SelectedEmployee.FIO}.xlsx";
+
+                excel.CreateRaportSeparate(filePath, employee);
+                CloseLoadingView.Execute(null);
             });
         }
 
@@ -110,31 +123,26 @@ namespace Pmi.ViewModel
         {
             await Task.Run(() =>
             {
-                if (ConfigurationManager.AppSettings.Get("filePath") != "")
-                { 
-                    if (File.Exists(ConfigurationManager.AppSettings.Get("filePath")))
-                    {
-                        OpenLoadingView.Execute(null);
-                        var employee = excel.GetEmployee(ConfigurationManager.AppSettings.Get("filePath"), new Employee(selectedEmployee), Year);
-                        if (employee.AutumnSemester.Disciplines.Count != 0 || employee.SpringSemester.Disciplines.Count != 0)
-                        {
-                            excel.CreateRaportInFile(ConfigurationManager.AppSettings.Get("filePath"), employee);
-                        }
-                        else
-                        {
-                            // Employee not found
-                        }
-                        CloseLoadingView.Execute(null);
-                    }
-                    else
-                    {
-                        // Error: file not found
-                    }
-                }
-                else
+                var filePath = ConfigurationManager.AppSettings.Get("filePath");
+                if (filePath == "")
                 {
                     // Error: file path not found
+                    return;
                 }
+                if (!File.Exists(filePath))
+                {
+                    // Error: file not found
+                    return;
+                }
+
+                OpenLoadingView.Execute(null);
+                var employee = excel.GetEmployee(filePath, new Employee(selectedEmployee));
+                if (!employee.HasDisciplines())
+                { 
+                    // Employee not found
+                }
+                excel.CreateRaportInFile(ConfigurationManager.AppSettings.Get("filePath"), employee);
+                CloseLoadingView.Execute(null);
             });
         }
     }

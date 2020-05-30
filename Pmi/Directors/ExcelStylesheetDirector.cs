@@ -1,10 +1,4 @@
 ﻿using Pmi.Builders;
-using Pmi.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 public enum ExcelCellFormats
 {
@@ -35,13 +29,13 @@ namespace Pmi.Directors
     public class ExcelStylesheetDirector
     {
         private ExcelStylesheetBuilder stylesheetBuilder;
-        public ExcelStylesheetBuilder StylesheetBuilder { set { stylesheetBuilder = value; } }
-        private FontDirector fontDirector;
-        private ExcelFontBuilder fontBuilder;
-        private ExcelCellFormatBuilder cellFormatBuilder;
-        private ExcelCellFormatDirector cellFormatDirector;
-        private BorderDirector borderDirector;
-        private ExcelBorderBuilder borderBuilder;
+        public ExcelStylesheetBuilder StylesheetBuilder { set => stylesheetBuilder = value; }
+        private readonly FontDirector fontDirector;
+        private readonly ExcelFontBuilder fontBuilder;
+        private readonly ExcelCellFormatBuilder cellFormatBuilder;
+        private readonly ExcelCellFormatDirector cellFormatDirector;
+        private readonly BorderDirector borderDirector;
+        private readonly ExcelBorderBuilder borderBuilder;
 
         public ExcelStylesheetDirector()
         {
@@ -144,6 +138,16 @@ namespace Pmi.Directors
             borderDirector.BuildDefaultBorders();
             cellFormatDirector.BuildColumnNumberCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.ColumnNumber, cellFormatBuilder.GetCellFormat());
+        }
+
+        private uint GetDefaultFont()
+        {
+            return stylesheetBuilder.AddFont(fontBuilder.GetFont());
+        }
+
+        private uint GetDefaultBorder()
+        {
+            return stylesheetBuilder.AddBorder(borderBuilder.GetBorders());
         }
     }
 }

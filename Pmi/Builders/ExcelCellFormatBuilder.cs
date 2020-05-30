@@ -1,10 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
 using Pmi.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pmi.Builders
 {
@@ -14,10 +9,8 @@ namespace Pmi.Builders
     public class ExcelCellFormatBuilder
     {
         private ExcelCellFormat cellFormat;
-        private const HorizontalAlignmentValues defaultHorizontalValue =
-            HorizontalAlignmentValues.Left;
-        private const VerticalAlignmentValues defaultVerticalValue =
-            VerticalAlignmentValues.Center;
+        private const HorizontalAlignmentValues defaultHorizontalValue = HorizontalAlignmentValues.Left;
+        private const VerticalAlignmentValues defaultVerticalValue = VerticalAlignmentValues.Center;
 
         public ExcelCellFormatBuilder()
         {
@@ -29,8 +22,10 @@ namespace Pmi.Builders
         /// </summary>
         public void Reset()
         {
-            cellFormat = new ExcelCellFormat();
-            cellFormat.VerticalAlignment = defaultVerticalValue;
+            cellFormat = new ExcelCellFormat
+            {
+                VerticalAlignment = defaultVerticalValue
+            };
         }
 
         public void SetWrapText(bool wrap)
@@ -41,7 +36,6 @@ namespace Pmi.Builders
         /// <summary>
         /// Устанавливает горизонтальное выравнивание для ячейки
         /// </summary>
-        /// <param name="aligment"></param>
         public void SetHorizontalAlignment(HorizontalAlignmentValues aligment)
         {
             cellFormat.HorizontalAlignment = aligment;
@@ -50,7 +44,6 @@ namespace Pmi.Builders
         /// <summary>
         /// Устанавливает вертикальное выравнивание для ячейки
         /// </summary>
-        /// <param name="aligment"></param>
         public void SetVerticalAlignment(VerticalAlignmentValues aligment)
         {
             cellFormat.VerticalAlignment = aligment;
@@ -59,12 +52,14 @@ namespace Pmi.Builders
         /// <summary>
         /// Устанавливает ссылку на шрифт для ячейки
         /// </summary>
-        /// <param name="fontId"></param>
         public void SetFontId(uint fontId)
         {
             cellFormat.FontId = fontId;
         }
 
+        /// <summary>
+        /// Устанавливает ссылку на границу ячейки
+        /// </summary>
         public void SetBorderId(uint borderId)
         {
             cellFormat.BorderId = borderId;
@@ -73,7 +68,6 @@ namespace Pmi.Builders
         /// <summary>
         /// Устанавливает тип для ячейки
         /// </summary>
-        /// <param name="type"></param>
         public void SetType(ExcelCellFormats type)
         {
             cellFormat.CellFormatType = type;
@@ -82,7 +76,6 @@ namespace Pmi.Builders
         /// <summary>
         /// Возвращает построенный формат ячейки
         /// </summary>
-        /// <returns></returns>
         public ExcelCellFormat GetCellFormat()
         {
             var cell = cellFormat;

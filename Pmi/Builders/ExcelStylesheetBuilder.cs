@@ -13,16 +13,13 @@ namespace Pmi.Builders
         private uint cellFormatStartId;
         private uint borderStartId;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="fontStartId">Первый свободный идентификатор для шрифта</param>
-        /// <param name="cellFormatStartId">Первый свободный идентификатор для формата ячейки</param>
-        public ExcelStylesheetBuilder(uint fontStartId, uint cellFormatStartId, uint borderStartId)
+        /// <param name="_fontStartId">Первый свободный идентификатор для шрифта</param>
+        /// <param name="_cellFormatStartId">Первый свободный идентификатор для формата ячейки</param>
+        public ExcelStylesheetBuilder(uint _fontStartId, uint _cellFormatStartId, uint _borderStartId)
         {
-            this.fontStartId = fontStartId;
-            this.cellFormatStartId = cellFormatStartId;
-            this.borderStartId = borderStartId;
+            fontStartId = _fontStartId;
+            cellFormatStartId = _cellFormatStartId;
+            borderStartId = _borderStartId;
             stylesheet = new ExcelStylesheet();            
         }
 
@@ -66,7 +63,7 @@ namespace Pmi.Builders
         /// <summary>
         /// Добавляет стандартное значение, если один из списков пуст. В случае подгрузки пустых стилей Excel выдаёт ошибку.
         /// </summary>
-        private void CheckForEmpty()
+        private void FillEmpty()
         {
             if (stylesheet.Fonts.Count == 0)
                 stylesheet.Fonts.Add(new Font());
@@ -81,10 +78,9 @@ namespace Pmi.Builders
         /// <summary>
         /// Возвращает построенный stylesheet
         /// </summary>
-        /// <returns></returns>
         public ExcelStylesheet GetStylesheet()
         {
-            CheckForEmpty();            
+            FillEmpty();            
             var stylesheetTemp = stylesheet;
             stylesheet = new ExcelStylesheet();            
             return stylesheetTemp;

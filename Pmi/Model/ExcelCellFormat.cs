@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DocumentFormat.OpenXml.Spreadsheet;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace Pmi.Model
 {
@@ -23,7 +18,7 @@ namespace Pmi.Model
 
         public static implicit operator CellFormat(ExcelCellFormat excelCellFormat)
         {
-            return new CellFormat()
+            var format = new CellFormat()
             {
                 FontId = excelCellFormat.FontId,
                 BorderId = excelCellFormat.BorderId,
@@ -35,6 +30,7 @@ namespace Pmi.Model
                     WrapText = excelCellFormat.Wrap
                 }
             };
+            return format;
         }
     }
 }

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Pmi.Model
 {
@@ -35,7 +31,7 @@ namespace Pmi.Model
         {
             return Lectures + PracticalWork + LaboratoryWork + ConsultationsByTheory +
                 ConsultationsByDiplom + Coursework + Diploms + Practice + Tests +
-                Exam + Aspirants + GEK+ AnotherWork;
+                Exam + Aspirants + GEK + AnotherWork;
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Pmi.Directors
     class BorderDirector
     {
         private ExcelBorderBuilder builder;
-        public ExcelBorderBuilder BorderBuilder { set { builder = value; } }
+        public ExcelBorderBuilder BorderBuilder { set => builder = value; }
 
         public void BuildDefaultBorders()
         {

@@ -28,7 +28,10 @@ namespace Pmi.ViewModel
         private RelayCommand change;
         public bool IsChanged { get; set; } = false;
 
-        public EmployeeViewModel SelectedEmployee { get { return selectedEmployee; } set
+        public EmployeeViewModel SelectedEmployee
+        {
+            get => selectedEmployee;
+            set
             {
                 selectedEmployee = value;
                 OnPropertyChanged("SelectedEmployee");
@@ -42,16 +45,30 @@ namespace Pmi.ViewModel
                 }
             }
         }
-        public string Icon { get { return icon; } set { icon = value; OnPropertyChanged("Icon"); } }
-        public string FilePath { get { return filePath; } set { filePath = value; OnPropertyChanged("FilePath"); } }
+
+        public string Icon
+        {
+            get => icon;
+            set { icon = value; OnPropertyChanged("Icon"); }
+        }
+
+        public string FilePath
+        {
+            get => filePath;
+            set { filePath = value; OnPropertyChanged("FilePath"); }
+        }
+
         public RelayCommand Rewiew
         {
             get
             {
                 return review ?? (review = new RelayCommand(obj =>
                 {
-                    OpenFileDialog openFileDialog = new OpenFileDialog();
-                    openFileDialog.Filter = "Excel documents (*.xlsx,*.xlsm)|*.xlsx;*.xlsm";
+                    OpenFileDialog openFileDialog = new OpenFileDialog
+                    {
+                        Filter = "Excel documents (*.xlsx,*.xlsm)|*.xlsx;*.xlsm"
+                    };
+
                     if (openFileDialog.ShowDialog() == true)
                     {
                         FilePath = openFileDialog.FileName;
@@ -62,11 +79,36 @@ namespace Pmi.ViewModel
             }
         }
 
-        public string Fio { get { return fio; } set { fio = value; OnPropertyChanged("Fio"); } }
-        public string Rank { get { return rank; } set { rank = value; OnPropertyChanged("Rank"); } }
-        public string StudyRank { get { return studyRank; } set { studyRank = value; OnPropertyChanged("StudyRank"); } }
-        public string Rate { get { return rate; } set { rate = value; OnPropertyChanged("Rate"); } }
-        public string Staffing { get { return staffing; } set { staffing = value; OnPropertyChanged("Staffing"); } }
+        public string Fio
+        {
+            get => fio;
+            set { fio = value; OnPropertyChanged("Fio"); }
+        }
+
+        public string Rank
+        {
+            get => rank;
+            set { rank = value; OnPropertyChanged("Rank"); }
+        }
+
+        public string StudyRank
+        {
+            get => studyRank;
+            set { studyRank = value; OnPropertyChanged("StudyRank"); }
+        }
+
+        public string Rate
+        {
+            get => rate;
+            set { rate = value; OnPropertyChanged("Rate"); }
+        }
+
+        public string Staffing
+        {
+            get => staffing;
+            set { staffing = value; OnPropertyChanged("Staffing"); }
+        }
+
         public RelayCommand Add
         {
             get
@@ -97,6 +139,7 @@ namespace Pmi.ViewModel
                 }));
             }
         }
+
         public RelayCommand Remove
         {
             get
@@ -112,7 +155,8 @@ namespace Pmi.ViewModel
                 }));
             }
         }
-        public RelayCommand Change { get { return change; } }
+
+        public RelayCommand Change => change;
 
         public SettingsViewModel(ObservableCollection<EmployeeViewModel> cacheEmployee)
         {

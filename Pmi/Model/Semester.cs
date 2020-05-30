@@ -9,10 +9,12 @@ namespace Pmi.Model
     class Semester
     {
         public List<Discipline> Disciplines { get; set; }
+
         public Semester()
         {
             Disciplines = new List<Discipline>();
         }
+
         public double TotalForLectures() => Disciplines.Sum(a => a.Lectures);
         public double TotalForPracticalWork() => Disciplines.Sum(a => a.PracticalWork);
         public double TotalForLaboratoryWork() => Disciplines.Sum(a => a.LaboratoryWork);
