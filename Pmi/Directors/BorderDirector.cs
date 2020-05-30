@@ -13,14 +13,12 @@ namespace Pmi.Directors
         private ExcelBorderBuilder builder;
         public ExcelBorderBuilder BorderBuilder { set => builder = value; }
 
-        public void BuildBorder()
+        public void BuildDefaultBorders()
         {
-            builder.GetBorder();
-        }
-
-        public void BuildEmptyBorder()
-        {
-            builder.Reset();
+            builder.AddTopBorder();
+            builder.AddBottomBorder();
+            builder.AddRightBorder();
+            builder.AddLeftBorder();
         }
     }
 }

@@ -49,105 +49,94 @@ namespace Pmi.Directors
         }
 
         public void BuildReportStylesheet()
-        {
-            borderDirector.BuildEmptyBorder();
+        {            
             fontDirector.BuildUniversityInfoFont();
-            cellFormatDirector.BuildUniveristyInfoCellFormat(GetDefaultFont(), GetDefaultBorder());
+            cellFormatDirector.BuildUniveristyInfoCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.UniveristyInfo, cellFormatBuilder.GetCellFormat());
 
-            fontDirector.BuildTitleFont();
-            borderDirector.BuildEmptyBorder();
-            cellFormatDirector.BuildTitleCellFormat(GetDefaultFont(), GetDefaultBorder());
+            fontDirector.BuildTitleFont();            
+            cellFormatDirector.BuildTitleCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.Title, cellFormatBuilder.GetCellFormat());
 
-            fontDirector.BuildApprove();
-            borderDirector.BuildEmptyBorder();
-            cellFormatDirector.BuildApproveCellFormat(GetDefaultFont(), GetDefaultBorder());
+            fontDirector.BuildApprove();            
+            cellFormatDirector.BuildApproveCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.Approve, cellFormatBuilder.GetCellFormat());
 
-            fontDirector.BuildPosition();
-            borderDirector.BuildEmptyBorder();
-            cellFormatDirector.BuildPositionCellFormat(GetDefaultFont(), GetDefaultBorder());
+            fontDirector.BuildPosition();            
+            cellFormatDirector.BuildPositionCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.Position, cellFormatBuilder.GetCellFormat());
 
-            fontDirector.BuildDepatment();
-            borderDirector.BuildEmptyBorder();
-            cellFormatDirector.BuildDepartmentCellFormat(GetDefaultFont(), GetDefaultBorder());
+            fontDirector.BuildDepatment();            
+            cellFormatDirector.BuildDepartmentCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.Depatment, cellFormatBuilder.GetCellFormat());
 
-            fontDirector.BuildManagerInfo();
-            borderDirector.BuildEmptyBorder();
-            cellFormatDirector.BuildManagerInfoCellFormat(GetDefaultFont(), GetDefaultBorder());
+            fontDirector.BuildManagerInfo();            
+            cellFormatDirector.BuildManagerInfoCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.ManagerInfo, cellFormatBuilder.GetCellFormat());
 
-            fontDirector.BuildManagerInfoMeta();
-            borderDirector.BuildEmptyBorder();
-            cellFormatDirector.BuildManagerInfoMetaCellFormat(GetDefaultFont(), GetDefaultBorder());
+            fontDirector.BuildManagerInfoMeta();            
+            cellFormatDirector.BuildManagerInfoMetaCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()),stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.ManagerInfoMeta, cellFormatBuilder.GetCellFormat());
 
             fontDirector.BuildTotal();
-            borderDirector.BuildBorder();
-            cellFormatDirector.BuildTotalCellFormat(GetDefaultFont(), GetDefaultBorder());
+            borderDirector.BuildDefaultBorders();
+            cellFormatDirector.BuildTotalCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.Total, cellFormatBuilder.GetCellFormat());
 
             fontDirector.BuildColumnName();
-            borderDirector.BuildBorder();
-            cellFormatDirector.BuildColumnNameCellFormat(GetDefaultFont(), GetDefaultBorder());
+            borderDirector.BuildDefaultBorders();
+            cellFormatDirector.BuildColumnNameCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.ColumnName, cellFormatBuilder.GetCellFormat());
 
             fontDirector.BuildDisciplineCode();
-            borderDirector.BuildBorder();
-            cellFormatDirector.BuildDisciplineCodeCellFormat(GetDefaultFont(), GetDefaultBorder());
+            borderDirector.BuildDefaultBorders();
+            cellFormatDirector.BuildDisciplineCodeCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()),stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.DisciplineCode, cellFormatBuilder.GetCellFormat());
 
             fontDirector.BuildDisciplineName();
-            borderDirector.BuildBorder();
-            cellFormatDirector.BuildDisciplineNameCellFormat(GetDefaultFont(), GetDefaultBorder());
+            borderDirector.BuildDefaultBorders();
+            cellFormatDirector.BuildDisciplineNameCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.DisciplineName, cellFormatBuilder.GetCellFormat());
 
             fontDirector.BuildSemesterName();
-            borderDirector.BuildBorder();
-            cellFormatDirector.BuildSemesterNameCellFormat(GetDefaultFont(), GetDefaultBorder());
+            borderDirector.BuildDefaultBorders();
+            cellFormatDirector.BuildSemesterNameCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.SemesterName, cellFormatBuilder.GetCellFormat());
 
             fontDirector.BuildGroupPlan();
-            borderDirector.BuildBorder();
-            cellFormatDirector.BuildGroupPlanCellFormat(GetDefaultFont(), GetDefaultBorder());
+            borderDirector.BuildDefaultBorders();
+            cellFormatDirector.BuildGroupPlanCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.GroupPlan, cellFormatBuilder.GetCellFormat());
 
             fontDirector.BuildColumnTotal();
-            borderDirector.BuildBorder();
-            cellFormatDirector.BuildColumnTotalCellFormat(GetDefaultFont(), GetDefaultBorder());
+            borderDirector.BuildDefaultBorders();
+            cellFormatDirector.BuildColumnTotalCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()),stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.ColumnTotal, cellFormatBuilder.GetCellFormat());
 
             fontDirector.BuildSemesterTotalName();
-            borderDirector.BuildBorder();
-            cellFormatDirector.BuildSemesterTotalLableCellFormat(GetDefaultFont(), GetDefaultBorder());
+            borderDirector.BuildDefaultBorders();
+            cellFormatDirector.BuildSemesterTotalLableCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.SemesterTotalLabel, cellFormatBuilder.GetCellFormat());
 
-            fontDirector.BuildTeacherSignature();
-            borderDirector.BuildEmptyBorder();
-            cellFormatDirector.BuildTeacherSignatureCellFormat(GetDefaultFont(), GetDefaultBorder());
+            fontDirector.BuildTeacherSignature();            
+            cellFormatDirector.BuildTeacherSignatureCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.TeacherSignature, cellFormatBuilder.GetCellFormat());
 
-            fontDirector.BuildYearFont();
-            borderDirector.BuildEmptyBorder();
-            cellFormatDirector.BuildYearCellFormat(GetDefaultFont(), GetDefaultBorder());
+            fontDirector.BuildYearFont();            
+            cellFormatDirector.BuildYearCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.Year, cellFormatBuilder.GetCellFormat());
 
-            fontDirector.BuildEmployeeInfoMeta();
-            borderDirector.BuildEmptyBorder();
-            cellFormatDirector.BuildEmployeeInfoMetaCellFormat(GetDefaultFont(), GetDefaultBorder());
+            fontDirector.BuildEmployeeInfoMeta();            
+            cellFormatDirector.BuildEmployeeInfoMetaCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.EmployeeInfoMeta, cellFormatBuilder.GetCellFormat());
 
-            fontDirector.BuildEmployeeInfo();
-            borderDirector.BuildEmptyBorder();
-            cellFormatDirector.BuildEmployeeCellFormat(GetDefaultFont(), GetDefaultBorder());
+            fontDirector.BuildEmployeeInfo();            
+            cellFormatDirector.BuildEmployeeCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.EmployeeInfo, cellFormatBuilder.GetCellFormat());
 
             fontDirector.BuildColumnNumber();
-            borderDirector.BuildBorder();
-            cellFormatDirector.BuildColumnNumberCellFormat(GetDefaultFont(), GetDefaultBorder());
+            borderDirector.BuildDefaultBorders();
+            cellFormatDirector.BuildColumnNumberCellFormat(stylesheetBuilder.AddFont(fontBuilder.GetFont()), stylesheetBuilder.AddBorder(borderBuilder.GetBorder()));
             stylesheetBuilder.AddCellFormat(ExcelCellFormats.ColumnNumber, cellFormatBuilder.GetCellFormat());
         }
 
