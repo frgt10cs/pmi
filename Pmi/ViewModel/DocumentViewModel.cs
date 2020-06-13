@@ -9,6 +9,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Pmi.ViewModel
 {
@@ -90,31 +91,38 @@ namespace Pmi.ViewModel
 
                 if (filePath.Length == 0)
                 {
-                    // Error: file path not found
+                    MessageBox.Show("Путь к файлу не найден");
                     return;
                 }
                 if (!File.Exists(filePath))
                 {
-                    // Error: file not found
+                    MessageBox.Show("Файл не найден");
                     return;
                 }
 
                 OpenLoadingView.Execute(null);
-                var employee = excel.GetEmployee(filePath, new Employee(selectedEmployee));
-                if (!employee.HasDisciplines())
+                try
                 {
-                    // Employee not found
-                    return;
-                }
+                    var employee = excel.GetEmployee(filePath, new Employee(selectedEmployee));
+                    if (!employee.HasDisciplines())
+                    {
+                        MessageBox.Show("Преподаватель не найден");
+                        return;
+                    }
 
-                var rightSlashPos = filePath.LastIndexOf('\\');
-                if (rightSlashPos != -1)
+                    var rightSlashPos = filePath.LastIndexOf('\\');
+                    if (rightSlashPos != -1)
+                    {
+                        filePath = filePath.Substring(0, rightSlashPos);
+                    }
+                    filePath += $"\\{SelectedEmployee.FIO}.xlsx";
+
+                    excel.CreateRaportSeparate(filePath, employee);
+                }
+                catch
                 {
-                    filePath = filePath.Substring(0, rightSlashPos);
+                    MessageBox.Show("Проблема с доступом к файлу");
                 }
-                filePath += $"\\{SelectedEmployee.FIO}.xlsx";
-
-                excel.CreateRaportSeparate(filePath, employee);
                 CloseLoadingView.Execute(null);
             });
         }
@@ -126,22 +134,30 @@ namespace Pmi.ViewModel
                 var filePath = ConfigurationManager.AppSettings.Get("filePath");
                 if (filePath == "")
                 {
-                    // Error: file path not found
+                    MessageBox.Show("Путь к файлу не найден");
                     return;
                 }
                 if (!File.Exists(filePath))
                 {
-                    // Error: file not found
+                    MessageBox.Show("Файл не найден");
                     return;
                 }
 
                 OpenLoadingView.Execute(null);
-                var employee = excel.GetEmployee(filePath, new Employee(selectedEmployee));
-                if (!employee.HasDisciplines())
-                { 
-                    // Employee not found
+                try
+                {
+                    var employee = excel.GetEmployee(filePath, new Employee(selectedEmployee));
+                    if (!employee.HasDisciplines())
+                    {
+                        MessageBox.Show("Преподаватель не найден");
+                        return;
+                    }
+                    excel.CreateRaportInFile(ConfigurationManager.AppSettings.Get("filePath"), employee);
                 }
-                excel.CreateRaportInFile(ConfigurationManager.AppSettings.Get("filePath"), employee);
+                catch
+                {
+                    MessageBox.Show("Проблема с доступом к файлу");
+                }
                 CloseLoadingView.Execute(null);
             });
         }

@@ -147,7 +147,7 @@ namespace Pmi.Directors
 
         private uint GetDefaultBorder()
         {
-            return stylesheetBuilder.AddBorder(borderBuilder.GetBorders());
+            return stylesheetBuilder.AddBorder(borderBuilder.GetBorder());
         }
     }
 }

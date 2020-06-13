@@ -9,6 +9,7 @@ using Pmi.Builders;
 using Pmi.Directors;
 using Pmi.Service.Abstraction;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace Pmi
 {
@@ -26,6 +27,9 @@ namespace Pmi
         public event EventHandler OnStatusChanged;
         private readonly string[] Column = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q" };
         readonly CacheService<List<ExcelCellFormat>> cacheService;
+
+        Regex regCodeOP = new Regex(@"[0-9]{2}.[0-9]{2}.[0-9]{2}");
+        Regex regGroup = new Regex(@"[0-9]{4}");
 
         public Excel(CacheService<List<ExcelCellFormat>> cacheService)
         {
@@ -285,11 +289,18 @@ namespace Pmi
                     string labEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "U" + row.ToString());
                     if (lekEmployee.Contains(employee.LastName) || prcEmployee.Contains(employee.LastName) || labEmployee.Contains(employee.LastName))
                     {
-                        var discipline = new Discipline(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()))
+                        Discipline discipline = new Discipline(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()));
+                        string temp = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString());
+                        MatchCollection matchGroup = regGroup.Matches(temp);
+                        MatchCollection matchCodeOP = regCodeOP.Matches(temp);
+                        foreach (Match group in matchGroup)
                         {
-                            Groups = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString()).Split('\n').ToList(),
-                            CodeOP = ""
-                        };
+                            discipline.Groups.Add(group.Value);
+                        }
+                        foreach (Match codeOP in matchCodeOP)
+                        {
+                            discipline.CodeOP.Add(codeOP.Value);
+                        }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "M" + row.ToString()) != "0" &&
                             lekEmployee.Contains(employee.LastName))
                         {
@@ -345,8 +356,17 @@ namespace Pmi
                     if (lekEmployee.Contains(employee.LastName) || prcEmployee.Contains(employee.LastName) || labEmployee.Contains(employee.LastName))
                     {
                         Discipline discipline = new Discipline(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()));
-                        discipline.Groups = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString()).Split('\n').ToList();
-                        discipline.CodeOP = "";
+                        string temp = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString());
+                        MatchCollection matchGroup = regGroup.Matches(temp);
+                        MatchCollection matchCodeOP = regCodeOP.Matches(temp);
+                        foreach (Match group in matchGroup)
+                        {
+                            discipline.Groups.Add(group.Value);
+                        }
+                        foreach (Match codeOP in matchCodeOP)
+                        {
+                            discipline.CodeOP.Add(codeOP.Value);
+                        }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AU" + row.ToString()) != "0" &&
                             lekEmployee.Contains(employee.LastName))
                         {
@@ -440,13 +460,19 @@ namespace Pmi
                     if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "B" + row.ToString()).Contains(employee.LastName))
                     {
                         string group = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString());
-                        if (group[1] == '4')
+                        string codeOP = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "G" + row.ToString());
+                        if (group.Length > 2)
                         {
-                            bachelor.Groups.Add(group);
-                        }
-                        else if (group[1] == '2')
-                        {
-                            magister.Groups.Add(group);
+                            if (group[1] == '4')
+                            {
+                                bachelor.Groups.Add(group);
+                                bachelor.CodeOP.Add(codeOP);
+                            }
+                            else if (group[1] == '2')
+                            {
+                                magister.Groups.Add(group);
+                                magister.CodeOP.Add(codeOP);
+                            }
                         }
                     }
                     row++;
@@ -483,20 +509,11 @@ namespace Pmi
                                 }
                                 prac.PracticalWork += double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, (j == 1 ? "K" : "L") + row.ToString()), CultureInfo.InvariantCulture);
                                 string code = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "D" + row.ToString());
-                                bool found = false;
-                                for (int i = 0; i < prac.Groups.Count; i++)
+                                if (!prac.CodeOP.Contains(code))
                                 {
-                                    if (prac.Groups[i].Contains(code))
-                                    {
-                                        prac.Groups[i] += ", " + GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "B" + row.ToString());
-                                        found = true;
-                                        break;
-                                    }
+                                    prac.CodeOP.Add(code);
                                 }
-                                if (!found)
-                                {
-                                    prac.Groups.Add(code + " " + GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "B" + row.ToString()));
-                                }
+                                prac.Groups.Add(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "B" + row.ToString()));
                             }
                             row++;
                         }
@@ -719,7 +736,7 @@ namespace Pmi
             foreach (var discipline in employee.SpringSemester.Disciplines)
             {
                 Cell cell = InsertCellInWorksheet("A", row, worksheetPart);
-                cell.CellValue = new CellValue(InsertSharedStringItem(discipline.CodeOP, shareStringPart).ToString());
+                cell.CellValue = new CellValue(InsertSharedStringItem(String.Join(", ", discipline.CodeOP), shareStringPart).ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
                 cell.StyleIndex = DisciplineCode;
                 cell = InsertCellInWorksheet("B", row, worksheetPart);
@@ -848,7 +865,7 @@ namespace Pmi
             foreach (var discipline in employee.AutumnSemester.Disciplines)
             {
                 Cell cell = InsertCellInWorksheet("A", row, worksheetPart);
-                cell.CellValue = new CellValue(InsertSharedStringItem(discipline.CodeOP, shareStringPart).ToString());
+                cell.CellValue = new CellValue(InsertSharedStringItem(String.Join(", ", discipline.CodeOP), shareStringPart).ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
                 cell.StyleIndex = DisciplineCode;
                 cell = InsertCellInWorksheet("B", row, worksheetPart);

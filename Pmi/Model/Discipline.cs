@@ -6,7 +6,7 @@ namespace Pmi.Model
     {
         public string Name { get; }
         public List<string> Groups { get; set; }
-        public string CodeOP { get; set; } 
+        public List<string> CodeOP { get; set; } 
         public double Lectures { get; set; }
         public double PracticalWork { get; set; }
         public double LaboratoryWork { get; set; }
@@ -25,6 +25,7 @@ namespace Pmi.Model
         {
             Name = name;
             Groups = new List<string>();
+            CodeOP = new List<string>();
         }
  
         public double TotalForThisDiscipline()
