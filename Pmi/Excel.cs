@@ -42,28 +42,34 @@ namespace Pmi
             SheetData sheetData = worksheet.GetFirstChild<SheetData>();
             string cellReference = columnName + rowIndex;
 
-            var row = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex == rowIndex);
-            if (row == null)
+            Row row;
+            if (sheetData.Elements<Row>().Where(r => r.RowIndex == rowIndex).Count() != 0)
             {
-                row = new Row() {
-                    RowIndex = rowIndex
-                };
-                sheetData.Append(row);
-            }
-
-            var cells = row.Elements<Cell>();
-
-            if (cells.Where(c => c.CellReference.Value == columnName + rowIndex).Count() > 0)
-            {
-                return cells.First(c => c.CellReference.Value == cellReference);
+                row = sheetData.Elements<Row>().Where(r => r.RowIndex == rowIndex).First();
             }
             else
             {
-                var refCell = cells.FirstOrDefault(cell => string.Compare(cell.CellReference.Value, cellReference, true) > 0);
+                row = new Row() { RowIndex = rowIndex };
+                sheetData.Append(row);
+            }
 
-                var newCell = new Cell() {
-                    CellReference = cellReference 
-                };
+            if (row.Elements<Cell>().Where(c => c.CellReference.Value == columnName + rowIndex).Count() > 0)
+            {
+                return row.Elements<Cell>().Where(c => c.CellReference.Value == cellReference).First();
+            }
+            else
+            {
+                Cell refCell = null;
+                foreach (Cell cell in row.Elements<Cell>())
+                {
+                    if (string.Compare(cell.CellReference.Value, cellReference, true) > 0)
+                    {
+                        refCell = cell;
+                        break;
+                    }
+                }
+
+                Cell newCell = new Cell() { CellReference = cellReference };
                 row.InsertBefore(newCell, refCell);
 
                 worksheet.Save();
@@ -78,34 +84,47 @@ namespace Pmi
                 shareStringPart.SharedStringTable = new SharedStringTable();
             }
 
-            int pos = shareStringPart.SharedStringTable.Elements<SharedStringItem>().ToList().FindIndex(i => i.InnerText == text);
+            int i = 0;
 
-            shareStringPart.SharedStringTable.AppendChild(new SharedStringItem(new Text(text)));
+            foreach (SharedStringItem item in shareStringPart.SharedStringTable.Elements<SharedStringItem>())
+            {
+                if (item.InnerText == text)
+                {
+                    return i;
+                }
+
+                i++;
+            }
+
+            shareStringPart.SharedStringTable.AppendChild(new SharedStringItem(new DocumentFormat.OpenXml.Spreadsheet.Text(text)));
             shareStringPart.SharedStringTable.Save();
 
-            return pos;
+            return i;
         }
 
         private WorksheetPart GetSheet(WorkbookPart workbookPart, string nameSheet)
         {
-            var sheets = workbookPart.Workbook.GetFirstChild<Sheets>();
-            var count = sheets.Elements<Sheet>().Count(i => i.Name.Value.Contains(nameSheet));
+            Sheets sheets = workbookPart.Workbook.GetFirstChild<Sheets>();
+            int count = 0;
+            foreach (var ItemSheets in sheets.Elements<Sheet>())
+            {
+                if (ItemSheets.Name.Value.Contains(nameSheet))
+                {
+                    count++;
+                }
+            }
 
-            var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+            WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
             worksheetPart.Worksheet = new Worksheet(new SheetData());
 
-            var relationshipId = workbookPart.GetIdOfPart(worksheetPart);
+            string relationshipId = workbookPart.GetIdOfPart(worksheetPart);
 
             uint sheetId = 1;
             if (sheets.Elements<Sheet>().Count() > 0)
             {
                 sheetId = sheets.Elements<Sheet>().Select(s => s.SheetId.Value).Max() + 1;
             }
-            var sheet = new Sheet() {
-                Id = relationshipId,
-                SheetId = sheetId,
-                Name = nameSheet + " " + count.ToString()
-            };
+            Sheet sheet = new Sheet() { Id = relationshipId, SheetId = sheetId, Name = nameSheet + " " + count.ToString() };
             sheets.Append(sheet);
             return worksheetPart;
         }
@@ -113,7 +132,7 @@ namespace Pmi
         private string GetCellValue(Worksheet worksheet, WorkbookPart workbookPart, string nameCell)
         {
             string value = "0";
-            Cell theCell = worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == nameCell);
+            Cell theCell = worksheet.Descendants<Cell>().Where(c => c.CellReference == nameCell).FirstOrDefault();
             if (theCell != null && theCell.InnerText.Length > 0)
             {
                 value = theCell.CellValue != null ? theCell.CellValue.InnerText : theCell.InnerText;
@@ -129,7 +148,15 @@ namespace Pmi
                             }
                             break;
                         case CellValues.Boolean:
-                            value = value == "0" ? "FALSE" : "TRUE";
+                            switch (value)
+                            {
+                                case "0":
+                                    value = "FALSE";
+                                    break;
+                                default:
+                                    value = "TRUE";
+                                    break;
+                            }
                             break;
                     }
                 }
