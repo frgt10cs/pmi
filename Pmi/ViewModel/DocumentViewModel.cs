@@ -23,7 +23,18 @@ namespace Pmi.ViewModel
         private RelayCommand createReport;
         private RelayCommand openLoadingView;
         private RelayCommand closeLoadingView;
-
+        
+        private string GetYear()
+        {
+            if (DateTime.Now.Month < 7)
+            {
+                return (DateTime.Now.Year - 1).ToString() + "/" + DateTime.Now.Year;
+            }
+            else
+            {
+                return DateTime.Now.Year + "/" + (DateTime.Now.Year + 1).ToString();
+            }
+        }
 
         public ObservableCollection<EmployeeViewModel> Employees { get; set; } = new ObservableCollection<EmployeeViewModel>();
 
@@ -55,6 +66,7 @@ namespace Pmi.ViewModel
 
         public DocumentViewModel(ObservableCollection<EmployeeViewModel> cacheEmployee, Excel cacheExcel, RelayCommand open, RelayCommand close)
         {
+            Year = GetYear();
             Employees = cacheEmployee;
             excel = cacheExcel;
             ReportModes = new ObservableCollection<string>()
@@ -117,7 +129,7 @@ namespace Pmi.ViewModel
                     }
                     filePath += $"\\{SelectedEmployee.FIO}.xlsx";
 
-                    excel.CreateRaportSeparate(filePath, employee);
+                    excel.CreateRaportSeparate(filePath, employee, year);
                 }
                 catch
                 {
@@ -152,7 +164,7 @@ namespace Pmi.ViewModel
                         MessageBox.Show("Преподаватель не найден");
                         return;
                     }
-                    excel.CreateRaportInFile(ConfigurationManager.AppSettings.Get("filePath"), employee);
+                    excel.CreateRaportInFile(ConfigurationManager.AppSettings.Get("filePath"), employee, year);
                 }
                 catch
                 {

@@ -563,7 +563,7 @@ namespace Pmi
         /// <param name="shareStringPart"> Таблица строк</param>
         /// <param name="cellFormats"> Стили ячеек</param>
         private void CreateRaport(Employee employee, WorksheetPart worksheetPart, SharedStringTablePart shareStringPart,
-            List<ExcelCellFormat> cellFormats)
+            List<ExcelCellFormat> cellFormats, string year)
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             
@@ -667,7 +667,7 @@ namespace Pmi
             uint DisciplineName = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.DisciplineName).Id;
             uint GroupPlan = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.GroupPlan).Id;
             uint ColumnTotal = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.ColumnTotal).Id;
-            
+
             CellData[] cells =
             {
                 new CellData(){Column = "A", Row = 1, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.UniveristyInfo).Id, Data = "федеральное государственное бюджетное образовательное учреждение высшего образования "},
@@ -679,7 +679,7 @@ namespace Pmi
                 new CellData(){Column = "O", Row = 7, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.ManagerInfoMeta).Id, Data = "подпись, ФИО"},
                 new CellData(){Column = "C", Row = 7, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.EmployeeInfo).Id, Data = $"{employee.Rank}, {employee.LastName} {employee.FirstName} {employee.Patronymic}, {employee.StudyRank}, {employee.Rate}, {employee.Staffing}"},
                 new CellData(){Column = "C", Row = 8, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.EmployeeInfoMeta).Id, Data = "должность, ФИО, ученая степень, ученое звание, доля ставки, штатность"},
-                new CellData(){Column = "C", Row = 9, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.Year).Id, Data = "на  2019 / 2020 учебный год"},
+                new CellData(){Column = "C", Row = 9, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.Year).Id, Data = "на  "+year+" учебный год"},
 
                 new CellData(){Column = "A", StyleIndex = ColumnName, Row = 11, Data = "Код ОП,\nиндекс дисциплины,\nнаименование дисциплины"},
                 new CellData(){Column = "B", StyleIndex = ColumnName, Row = 11, Data = ""},
@@ -1069,7 +1069,7 @@ namespace Pmi
         /// </summary>
         /// <param name="path"> Путь к итоговому файлу</param>
         /// <param name="employee"> Преподаватель</param>
-        public void CreateRaportSeparate(string path, Employee employee)
+        public void CreateRaportSeparate(string path, Employee employee, string year)
         {
             OnStatusChanged?.Invoke("Создаётся документ", null);
             SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Create(path, SpreadsheetDocumentType.Workbook);
@@ -1113,7 +1113,7 @@ namespace Pmi
             AppendStylesToDocument(spreadsheetDocument, reportStylesheet);
             OnProgressChanged?.Invoke(7, null);
 
-            CreateRaport(employee, worksheetPart, shareStringPart, reportStylesheet.CellFormats);
+            CreateRaport(employee, worksheetPart, shareStringPart, reportStylesheet.CellFormats, year);
             
             OnStatusChanged?.Invoke("Сохранение документа", null);
             workbookpart.Workbook.Save();
@@ -1126,7 +1126,7 @@ namespace Pmi
         /// </summary>
         /// <param name="path"> Путь к файлу</param>
         /// <param name="employee"> Преподаватель</param>
-        public void CreateRaportInFile(string path, Employee employee)
+        public void CreateRaportInFile(string path, Employee employee, string year)
         {
             OnStatusChanged?.Invoke("Открывается документ", null);
             using (SpreadsheetDocument doc = SpreadsheetDocument.Open(path, true))
@@ -1150,7 +1150,7 @@ namespace Pmi
                 var worksheetPart = GetSheet(doc.WorkbookPart, employee.LastName + " " + employee.FirstName[0] + "." + employee.Patronymic[0] + ".");
                 OnProgressChanged?.Invoke(7, null);
 
-                CreateRaport(employee, worksheetPart, shareStringPart, cellFormats);
+                CreateRaport(employee, worksheetPart, shareStringPart, cellFormats, year);
                 
                 OnStatusChanged?.Invoke("Сохраняется документ", null);
                 doc.WorkbookPart.Workbook.Save();
