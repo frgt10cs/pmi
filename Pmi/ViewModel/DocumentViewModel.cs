@@ -21,6 +21,7 @@ namespace Pmi.ViewModel
         private string selectedMode;
         private readonly Regex yearRegex = new Regex(@"[0-9]{4}/[0-9]{4}");
         private RelayCommand createReport;
+        private RelayCommand createAllReport;
         private RelayCommand openLoadingView;
         private RelayCommand closeLoadingView;
         
@@ -60,6 +61,8 @@ namespace Pmi.ViewModel
 
         public RelayCommand CreateReport => createReport;
 
+        public RelayCommand CreateAllReport => createAllReport;
+
         public RelayCommand OpenLoadingView => openLoadingView;
 
         public RelayCommand CloseLoadingView => closeLoadingView;
@@ -87,6 +90,20 @@ namespace Pmi.ViewModel
                 }
             },
             _obj => selectedEmployee != null && selectedMode != null && IsYear()
+            );
+
+            createAllReport = new RelayCommand(obj =>
+            {
+                if (selectedMode == ReportModes[0])
+                {
+                    ExecuteAllRaportInFile();
+                }
+                else if (selectedMode == ReportModes[1])
+                {
+                    ExecuteAllRaportSeparate();
+                }
+            },
+            _obj => selectedMode != null && IsYear()
             );
 
             openLoadingView = open;
@@ -119,6 +136,7 @@ namespace Pmi.ViewModel
                     if (!employee.HasDisciplines())
                     {
                         MessageBox.Show("Преподаватель не найден");
+                        CloseLoadingView.Execute(null);
                         return;
                     }
 
@@ -162,9 +180,94 @@ namespace Pmi.ViewModel
                     if (!employee.HasDisciplines())
                     {
                         MessageBox.Show("Преподаватель не найден");
+                        CloseLoadingView.Execute(null);
                         return;
                     }
                     excel.CreateRaportInFile(ConfigurationManager.AppSettings.Get("filePath"), employee, year);
+                }
+                catch
+                {
+                    MessageBox.Show("Проблема с доступом к файлу");
+                }
+                CloseLoadingView.Execute(null);
+            });
+        }
+
+
+        private async void ExecuteAllRaportSeparate()
+        {
+            await Task.Run(() =>
+            {
+                var filePath = ConfigurationManager.AppSettings.Get("filePath");
+
+                if (filePath.Length == 0)
+                {
+                    MessageBox.Show("Путь к файлу не найден");
+                    return;
+                }
+                if (!File.Exists(filePath))
+                {
+                    MessageBox.Show("Файл не найден");
+                    return;
+                }
+                var rightSlashPos = filePath.LastIndexOf('\\');
+                var _filePath = "";
+                if (rightSlashPos != -1)
+                {
+                    _filePath = filePath.Substring(0, rightSlashPos);
+                }
+                OpenLoadingView.Execute(null);
+                try
+                {
+                    foreach (var employee in Employees)
+                    {
+                        var Employee = excel.GetEmployee(filePath, new Employee(employee));
+                        if (!Employee.HasDisciplines())
+                        {
+                            MessageBox.Show("Преподаватель "+employee.FIO+" не найден");
+                            continue;
+                        }
+
+                        excel.CreateRaportSeparate(_filePath + $"\\{employee.FIO}.xlsx", Employee, year);
+                    }
+                }
+                catch
+                {
+                    MessageBox.Show("Проблема с доступом к файлу");
+                }
+                CloseLoadingView.Execute(null);
+            });
+        }
+
+        private async void ExecuteAllRaportInFile()
+        {
+            await Task.Run(() =>
+            {
+                var filePath = ConfigurationManager.AppSettings.Get("filePath");
+                if (filePath == "")
+                {
+                    MessageBox.Show("Путь к файлу не найден");
+                    return;
+                }
+                if (!File.Exists(filePath))
+                {
+                    MessageBox.Show("Файл не найден");
+                    return;
+                }
+
+                OpenLoadingView.Execute(null);
+                try
+                {
+                    foreach (var employee in Employees)
+                    {
+                        var Employee = excel.GetEmployee(filePath, new Employee(employee));
+                        if (!Employee.HasDisciplines())
+                        {
+                            MessageBox.Show("Преподаватель "+employee.FIO+" не найден");
+                            continue;
+                        }
+                        excel.CreateRaportInFile(ConfigurationManager.AppSettings.Get("filePath"), Employee, year);
+                    }
                 }
                 catch
                 {

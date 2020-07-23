@@ -71,7 +71,7 @@
                 <Label Content="{Binding SelectedEmployee.FIO }" Grid.Row="4" Grid.ColumnSpan="2" Background="Silver"/>
             </Grid>
         </GroupBox>
-        <Button Grid.Row="2" Grid.Column="2" Margin="15" Background="RoyalBlue">
+        <Button Grid.Row="2" Grid.Column="2" Margin="15" Background="RoyalBlue" Command="{Binding CreateAllReport}">
             <Viewbox>
                 <TextBlock Margin="10,0,10,0" TextAlignment="Center">Сформировать для всех<LineBreak/>преподавателей</TextBlock>
             </Viewbox>
