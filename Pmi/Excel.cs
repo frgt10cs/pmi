@@ -534,7 +534,7 @@ namespace Pmi
                                     }
                                     CanAdd = false;
                                 }
-                                prac.PracticalWork += double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, (j == 1 ? "K" : "L") + row.ToString()), CultureInfo.InvariantCulture);
+                                prac.Practice += double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, (j == 1 ? "K" : "L") + row.ToString()), CultureInfo.InvariantCulture);
                                 string code = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "D" + row.ToString());
                                 if (!prac.CodeOP.Contains(code))
                                 {
