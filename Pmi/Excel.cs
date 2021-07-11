@@ -297,7 +297,7 @@ namespace Pmi
                 Sheet SheetDipl = sheet.FirstOrDefault(s => s.Name == "Дипл исх данные");
                 Sheet SheetPrac = sheet.FirstOrDefault(s => s.Name == "Рук-ли практики  бак");
                 Sheet SheetPracMag = sheet.FirstOrDefault(s => s.Name == "Рук-ли практики маг ");
-                if (Sheet1 == null || Sheet2 == null || SheetDipl == null)
+                if (Sheet1 == null || Sheet2 == null)
                 {
                     return null;
                 }
@@ -480,74 +480,79 @@ namespace Pmi
                     row++;
                 }
                 OnProgressChanged?.Invoke(3, null);
-                worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(SheetDipl.Id));
-                row = 2;
-                while (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "B" + row.ToString()) != "0")
+                if (SheetDipl != null)
                 {
-                    if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "B" + row.ToString()).Contains(employee.LastName))
+                    worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(SheetDipl.Id));
+                    row = 2;
+                    while (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "B" + row.ToString()) != "0")
                     {
-                        string group = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString());
-                        string codeOP = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "G" + row.ToString());
-                        if (group.Length > 2)
+                        if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "B" + row.ToString()).Contains(employee.LastName))
                         {
-                            if (group[1] == '4')
+                            string group = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString());
+                            string codeOP = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "G" + row.ToString());
+                            if (group.Length > 2)
                             {
-                                bachelor.Groups.Add(group);
-                                bachelor.CodeOP.Add(codeOP);
-                            }
-                            else if (group[1] == '2')
-                            {
-                                magister.Groups.Add(group);
-                                magister.CodeOP.Add(codeOP);
+                                if (group[1] == '4')
+                                {
+                                    bachelor.Groups.Add(group);
+                                    bachelor.CodeOP.Add(codeOP);
+                                }
+                                else if (group[1] == '2')
+                                {
+                                    magister.Groups.Add(group);
+                                    magister.CodeOP.Add(codeOP);
+                                }
                             }
                         }
+                        row++;
                     }
-                    row++;
-                }
+                }                
                 OnProgressChanged?.Invoke(4, null);
                 #endregion
                 
                 OnStatusChanged?.Invoke("Сбор данных: Практика", null);
                 #region Практика
-                
-                worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(SheetPrac.Id));
-                row = 3;
-                for (int j = 0; j < 2; j++)
+                if (SheetPrac != null && SheetPracMag != null)
                 {
-                    while (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "A" + row.ToString()) != "0")
+                    worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(SheetPrac.Id));
+                    row = 3;
+                    for (int j = 0; j < 2; j++)
                     {
-                        Discipline prac = new Discipline(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "A" + (row - 2).ToString()));
-                        bool CanAdd = true;
-                        while (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "A" + row.ToString()) != "№  п/п" && GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "A" + row.ToString()) != "0")
+                        while (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "A" + row.ToString()) != "0")
                         {
-                            if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()).Contains(employee.LastName))
+                            Discipline prac = new Discipline(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "A" + (row - 2).ToString()));
+                            bool CanAdd = true;
+                            while (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "A" + row.ToString()) != "№  п/п" && GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "A" + row.ToString()) != "0")
                             {
-                                if (CanAdd)
+                                if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()).Contains(employee.LastName))
                                 {
-                                    if (int.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "E" + row.ToString()).Split('.')[1].Substring(0, 2)) < 9)
+                                    if (CanAdd)
                                     {
-                                        employee.AutumnSemester.Disciplines.Add(prac);
+                                        if (int.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "E" + row.ToString()).Split('.')[1].Substring(0, 2)) < 9)
+                                        {
+                                            employee.AutumnSemester.Disciplines.Add(prac);
+                                        }
+                                        else
+                                        {
+                                            employee.SpringSemester.Disciplines.Add(prac);
+                                        }
+                                        CanAdd = false;
                                     }
-                                    else
+                                    prac.Practice += double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, (j == 1 ? "K" : "L") + row.ToString()), CultureInfo.InvariantCulture);
+                                    string code = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "D" + row.ToString());
+                                    if (!prac.CodeOP.Contains(code))
                                     {
-                                        employee.SpringSemester.Disciplines.Add(prac);
+                                        prac.CodeOP.Add(code);
                                     }
-                                    CanAdd = false;
+                                    prac.Groups.Add(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "B" + row.ToString()));
                                 }
-                                prac.Practice += double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, (j == 1 ? "K" : "L") + row.ToString()), CultureInfo.InvariantCulture);
-                                string code = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "D" + row.ToString());
-                                if (!prac.CodeOP.Contains(code))
-                                {
-                                    prac.CodeOP.Add(code);
-                                }
-                                prac.Groups.Add(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "B" + row.ToString()));
+                                row++;
                             }
                             row++;
                         }
-                        row++;
+                        row = 4;
+                        worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(SheetPracMag.Id));
                     }
-                    row = 4;
-                    worksheetPart = (WorksheetPart)(doc.WorkbookPart.GetPartById(SheetPracMag.Id));
                 }
                 OnProgressChanged?.Invoke(5, null);
                 #endregion
@@ -684,18 +689,18 @@ namespace Pmi
                 new CellData(){Column = "A", StyleIndex = ColumnName, Row = 11, Data = "Код ОП,\nиндекс дисциплины,\nнаименование дисциплины"},
                 new CellData(){Column = "B", StyleIndex = ColumnName, Row = 11, Data = ""},
                 new CellData(){Column = "C", StyleIndex = ColumnName, Row = 11, Data = "Группа"},
-                new CellData(){Column = "D", StyleIndex = ColumnName, Row = 11, Data = "Лекц"},
-                new CellData(){Column = "E", StyleIndex = ColumnName, Row = 11, Data = "Практ"},
-                new CellData(){Column = "F", StyleIndex = ColumnName, Row = 11, Data = "Лаб"},
-                new CellData(){Column = "G", StyleIndex = ColumnName, Row = 11, Data = "Консульт. студ."},
+                new CellData(){Column = "D", StyleIndex = ColumnName, Row = 11, Data = "Лекции"},
+                new CellData(){Column = "E", StyleIndex = ColumnName, Row = 11, Data = "Практ-кие (сем-кие) занятия"},
+                new CellData(){Column = "F", StyleIndex = ColumnName, Row = 11, Data = "Лаб-ые работы"},
+                new CellData(){Column = "G", StyleIndex = ColumnName, Row = 11, Data = "Консультации студентов"},
                 new CellData(){Column = "H", StyleIndex = ColumnName, Row = 11, Data = ""},
                 new CellData(){Column = "I", StyleIndex = ColumnName, Row = 11, Data = "Руководство"},
                 new CellData(){Column = "J", StyleIndex = ColumnName, Row = 11, Data = ""},
                 new CellData(){Column = "K", StyleIndex = ColumnName, Row = 11, Data = ""},
                 new CellData(){Column = "L", StyleIndex = ColumnName, Row = 11, Data = ""},
-                new CellData(){Column = "M", StyleIndex = ColumnName, Row = 11, Data = "ГЭК"},
-                new CellData(){Column = "N", StyleIndex = ColumnName, Row = 11, Data = "ЗАЧ"},
-                new CellData(){Column = "O", StyleIndex = ColumnName, Row = 11, Data = "ЭКЗ"},
+                new CellData(){Column = "M", StyleIndex = ColumnName, Row = 11, Data = "Работа в ГЭК"},
+                new CellData(){Column = "N", StyleIndex = ColumnName, Row = 11, Data = "ЗАЧЕТ"},
+                new CellData(){Column = "O", StyleIndex = ColumnName, Row = 11, Data = "ЭКЗАМЕН"},
                 new CellData(){Column = "P", StyleIndex = ColumnName, Row = 11, Data = "Другие  виды уч. работы"},
                 new CellData(){Column = "Q", StyleIndex = Total, Row = 11, Data = " ВСЕГО"},
                 new CellData(){Column = "A", StyleIndex = ColumnName, Row = 12, Data = ""},
@@ -704,12 +709,12 @@ namespace Pmi
                 new CellData(){Column = "D", StyleIndex = ColumnName, Row = 12, Data = ""},
                 new CellData(){Column = "E", StyleIndex = ColumnName, Row = 12, Data = ""},
                 new CellData(){Column = "F", StyleIndex = ColumnName, Row = 12, Data = ""},
-                new CellData(){Column = "G", StyleIndex = ColumnName, Row = 12, Data = "по теор. курсу"},
-                new CellData(){Column = "H", StyleIndex = ColumnName, Row = 12, Data = "по дипл. проект."},
-                new CellData(){Column = "I", StyleIndex = ColumnName, Row = 12, Data = "асп-ми"},
-                new CellData(){Column = "J", StyleIndex = ColumnName, Row = 12, Data = "курс. проект. (раб.)"},
-                new CellData(){Column = "K", StyleIndex = ColumnName, Row = 12, Data = "дипл. проект."},
-                new CellData(){Column = "L", StyleIndex = ColumnName, Row = 12, Data = "практ."},
+                new CellData(){Column = "G", StyleIndex = ColumnName, Row = 12, Data = "Перед экзаменом"},
+                new CellData(){Column = "H", StyleIndex = ColumnName, Row = 12, Data = "по ВКР (экономика, бжд)"},
+                new CellData(){Column = "I", StyleIndex = ColumnName, Row = 12, Data = "аспиран-тами"},
+                new CellData(){Column = "J", StyleIndex = ColumnName, Row = 12, Data = "Курсовым проектом (работой)"},
+                new CellData(){Column = "K", StyleIndex = ColumnName, Row = 12, Data = "ВКР"},
+                new CellData(){Column = "L", StyleIndex = ColumnName, Row = 12, Data = "Практикой"},
                 new CellData(){Column = "M", StyleIndex = ColumnName, Row = 12, Data = ""},
                 new CellData(){Column = "N", StyleIndex = ColumnName, Row = 12, Data = ""},
                 new CellData(){Column = "O", StyleIndex = ColumnName, Row = 12, Data = ""},
