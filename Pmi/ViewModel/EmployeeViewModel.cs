@@ -16,6 +16,7 @@ namespace Pmi.Model
         private string studyRank;
         private string rate;
         private string staffing;
+        private string title;
 
         public string FIO => $"{LastName} {FirstName[0]}. {Patronymic[0]}.";
 
@@ -52,6 +53,11 @@ namespace Pmi.Model
         public string Staffing {
             get => staffing;
             set { staffing = value; OnPropertyChanged("Staffing"); } 
+        }
+        public string Title
+        {
+            get => title;
+            set { title = value; OnPropertyChanged("Title"); }
         }
     }
 }

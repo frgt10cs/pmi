@@ -35,6 +35,7 @@
                         <GridViewColumn DisplayMemberBinding="{Binding Path=StudyRank}">Ученая степень</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding Path=Rate}">Доля ставки</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding Path=Staffing}">Штатность</GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding Path=Title}">Звание</GridViewColumn>
                     </GridView>
                 </ListView.View>
             </ListView>
@@ -44,6 +45,7 @@
                 <TextBox Style="{StaticResource PlaceholderTextBoxStyle}" Text="{Binding StudyRank}" Margin="0,0,0,10" Tag="Ученая степень"/>
                 <TextBox Style="{StaticResource PlaceholderTextBoxStyle}" Text="{Binding Rate}" Margin="0,0,0,10" Tag="Доля ставки"/>
                 <TextBox Style="{StaticResource PlaceholderTextBoxStyle}" Text="{Binding Staffing}" Margin="0,0,0,10" Tag="Штатность"/>
+                <TextBox Style="{StaticResource PlaceholderTextBoxStyle}" Text="{Binding Title}" Margin="0,0,0,10" Tag="Звание"/>
                 <Button Command="{Binding Change}" Margin="30,0,30,5" Height="20" Content="Сохранить"/>
                 <Button Command="{Binding Add}" Margin="30,0,30,5" Height="20" Content="Добавить"/>
                 <Button Command="{Binding Remove}" Margin="30,0,30,0" Height="20" Content="Удалить"/>

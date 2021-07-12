@@ -23,6 +23,7 @@ namespace Pmi.ViewModel
         private string studyRank;
         private string rate;
         private string staffing;
+        private string title;
         private RelayCommand add;
         private RelayCommand remove;
         private RelayCommand change;
@@ -42,6 +43,7 @@ namespace Pmi.ViewModel
                     StudyRank = selectedEmployee.StudyRank;
                     Rate = selectedEmployee.Rate;
                     Staffing = selectedEmployee.Staffing;
+                    Title = selectedEmployee.Title;
                 }
             }
         }
@@ -108,6 +110,11 @@ namespace Pmi.ViewModel
             get => staffing;
             set { staffing = value; OnPropertyChanged("Staffing"); }
         }
+        public string Title
+        {
+            get => title;
+            set { title = value; OnPropertyChanged("Title"); }
+        }
 
         public RelayCommand Add
         {
@@ -126,7 +133,8 @@ namespace Pmi.ViewModel
                             Rank = rank,
                             StudyRank = studyRank,
                             Rate = rate,
-                            Staffing = staffing
+                            Staffing = staffing,
+                            Title = title
                         };
                         Employees.Add(TempEmployee);
                         SelectedEmployee = TempEmployee;
@@ -175,6 +183,7 @@ namespace Pmi.ViewModel
                     selectedEmployee.StudyRank = studyRank;
                     selectedEmployee.Rate = rate;
                     selectedEmployee.Staffing = staffing;
+                    selectedEmployee.Title = title;
                     IsChanged = true;
                 }
                 else

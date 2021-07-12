@@ -9,6 +9,7 @@
         public string StudyRank { get; set; }
         public string Rate { get; set; }
         public string Staffing { get; set; }
+        public string Title { get; set; }
         public Semester AutumnSemester { get; set; }
         public Semester SpringSemester { get; set; }
 
@@ -28,6 +29,7 @@
             StudyRank = eVM.StudyRank;
             Rate = eVM.Rate;
             Staffing = eVM.Staffing;
+            Title = eVM.Title;
             AutumnSemester = new Semester();
             SpringSemester = new Semester();
         }

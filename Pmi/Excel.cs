@@ -308,8 +308,14 @@ namespace Pmi
                 #region Создание дисциплин
                 
                 int row = 5;
-                while (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString()) != "Итого по ")
+                int emptyRow = 0;
+                while (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "B" + row.ToString()) != "EOL" && emptyRow < 20)
                 {
+                    if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "B" + row.ToString()) == "0")
+                        emptyRow++;
+                    else
+                        emptyRow = 0;
+                    Console.WriteLine(emptyRow);
                     //_________________________ОСЕННИЙ СЕМЕСТР_______________________
                     string lekEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "O" + row.ToString());
                     string prcEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "R" + row.ToString());
@@ -682,8 +688,8 @@ namespace Pmi
                 new CellData(){Column = "M", Row = 5, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.Position).Id, Data = "Зав. кафедрой ПМИ"},
                 new CellData(){Column = "M", Row = 6, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.ManagerInfo).Id, Data = "Зайдуллин С.С."},
                 new CellData(){Column = "O", Row = 7, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.ManagerInfoMeta).Id, Data = "подпись, ФИО"},
-                new CellData(){Column = "C", Row = 7, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.EmployeeInfo).Id, Data = $"{employee.Rank}, {employee.LastName} {employee.FirstName} {employee.Patronymic}, {employee.StudyRank}, {employee.Rate}, {employee.Staffing}"},
-                new CellData(){Column = "C", Row = 8, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.EmployeeInfoMeta).Id, Data = "должность, ФИО, ученая степень, ученое звание, доля ставки, штатность"},
+                new CellData(){Column = "C", Row = 7, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.EmployeeInfo).Id, Data = $"{employee.Rank}, {employee.LastName} {employee.FirstName} {employee.Patronymic}, {employee.StudyRank}, {employee.Rate}, {employee.Staffing}, {employee.Title}"},
+                new CellData(){Column = "C", Row = 8, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.EmployeeInfoMeta).Id, Data = "должность, ФИО, ученая степень, ученое звание, доля ставки, штатность, звание"},
                 new CellData(){Column = "C", Row = 9, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.Year).Id, Data = "на  "+year+" учебный год"},
 
                 new CellData(){Column = "A", StyleIndex = ColumnName, Row = 11, Data = "Код ОП,\nиндекс дисциплины,\nнаименование дисциплины"},
