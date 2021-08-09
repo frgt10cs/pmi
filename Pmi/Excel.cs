@@ -315,12 +315,25 @@ namespace Pmi
                         emptyRow++;
                     else
                         emptyRow = 0;
-                    Console.WriteLine(emptyRow);
+
+                    if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()).Contains("практик"))
+                    {
+                        row++;
+                        continue;
+                    }
+
                     //_________________________ОСЕННИЙ СЕМЕСТР_______________________
                     string lekEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "O" + row.ToString());
                     string prcEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "R" + row.ToString());
                     string labEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "U" + row.ToString());
-                    if (lekEmployee.Contains(employee.LastName) || prcEmployee.Contains(employee.LastName) || labEmployee.Contains(employee.LastName))
+
+                    string cursEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "Y" + row.ToString());
+                    string testEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AN" + row.ToString());
+                    string examEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AQ" + row.ToString());
+
+                    if (lekEmployee.Contains(employee.LastName) || prcEmployee.Contains(employee.LastName) ||
+                        labEmployee.Contains(employee.LastName) || cursEmployee.Contains(employee.LastName) ||
+                        testEmployee.Contains(employee.LastName) || examEmployee.Contains(employee.LastName))
                     {
                         Discipline discipline = new Discipline(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()));
                         string temp = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString());
@@ -365,19 +378,40 @@ namespace Pmi
                             }
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "W" + row.ToString()) != "0" &&
-                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "Y" + row.ToString()).Contains(employee.LastName))
+                            cursEmployee.Contains(employee.LastName))
                         {
-                            discipline.Coursework = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "X" + row.ToString()));
+                            if (cursEmployee.Contains(';'))
+                            {
+                                discipline.Coursework = GetHour(cursEmployee, employee.LastName);
+                            }
+                            else
+                            {
+                                discipline.Coursework = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "X" + row.ToString()), CultureInfo.InvariantCulture);
+                            }
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AL" + row.ToString()) != "0" &&
-                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AN" + row.ToString()).Contains(employee.LastName))
+                            testEmployee.Contains(employee.LastName))
                         {
-                            discipline.Tests = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AM" + row.ToString()), CultureInfo.InvariantCulture);
+                            if (testEmployee.Contains(';'))
+                            {
+                                discipline.Tests = GetHour(testEmployee, employee.LastName);
+                            }
+                            else
+                            {
+                                discipline.Tests = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AM" + row.ToString()), CultureInfo.InvariantCulture);
+                            }
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AO" + row.ToString()) != "0" &&
-                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AQ" + row.ToString()).Contains(employee.LastName))
+                            examEmployee.Contains(employee.LastName))
                         {
-                            discipline.Exam = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AP" + row.ToString()), CultureInfo.InvariantCulture);
+                            if (examEmployee.Contains(';'))
+                            {
+                                discipline.Exam = GetHour(examEmployee, employee.LastName);
+                            }
+                            else
+                            {
+                                discipline.Exam = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AP" + row.ToString()), CultureInfo.InvariantCulture);
+                            }
                         }
                         employee.SpringSemester.Disciplines.Add(discipline);
                     }
@@ -386,7 +420,14 @@ namespace Pmi
                     lekEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AW" + row.ToString());
                     prcEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "AZ" + row.ToString());
                     labEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BC" + row.ToString());
-                    if (lekEmployee.Contains(employee.LastName) || prcEmployee.Contains(employee.LastName) || labEmployee.Contains(employee.LastName))
+
+                    cursEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BG" + row.ToString());
+                    testEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BV" + row.ToString());
+                    examEmployee = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BY" + row.ToString());
+
+                    if (lekEmployee.Contains(employee.LastName) || prcEmployee.Contains(employee.LastName) ||
+                        labEmployee.Contains(employee.LastName) || cursEmployee.Contains(employee.LastName) ||
+                        testEmployee.Contains(employee.LastName) || examEmployee.Contains(employee.LastName))
                     {
                         Discipline discipline = new Discipline(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "C" + row.ToString()));
                         string temp = GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "F" + row.ToString());
@@ -431,19 +472,40 @@ namespace Pmi
                             }
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BE" + row.ToString()) != "0" &&
-                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BG" + row.ToString()).Contains(employee.LastName))
+                            cursEmployee.Contains(employee.LastName))
                         {
-                            discipline.Coursework = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BF" + row.ToString()));
+                            if (cursEmployee.Contains(';'))
+                            {
+                                discipline.Coursework = GetHour(cursEmployee, employee.LastName);
+                            }
+                            else
+                            {
+                                discipline.Coursework = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BF" + row.ToString()), CultureInfo.InvariantCulture);
+                            }
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BT" + row.ToString()) != "0" &&
-                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BV" + row.ToString()).Contains(employee.LastName))
+                            testEmployee.Contains(employee.LastName))
                         {
-                            discipline.Tests = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BU" + row.ToString()), CultureInfo.InvariantCulture);
+                            if (testEmployee.Contains(';'))
+                            {
+                                discipline.Tests = GetHour(testEmployee, employee.LastName);
+                            }
+                            else
+                            {
+                                discipline.Tests = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BU" + row.ToString()), CultureInfo.InvariantCulture);
+                            }
                         }
                         if (GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BW" + row.ToString()) != "0" &&
-                            GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BY" + row.ToString()).Contains(employee.LastName))
+                            examEmployee.Contains(employee.LastName))
                         {
-                            discipline.Exam = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BX" + row.ToString()), CultureInfo.InvariantCulture);
+                            if (examEmployee.Contains(';'))
+                            {
+                                discipline.Exam = GetHour(examEmployee, employee.LastName);
+                            }
+                            else
+                            {
+                                discipline.Exam = double.Parse(GetCellValue(worksheetPart.Worksheet, doc.WorkbookPart, "BX" + row.ToString()), CultureInfo.InvariantCulture);
+                            }
                         }
                         employee.AutumnSemester.Disciplines.Add(discipline);
                     }
@@ -586,18 +648,18 @@ namespace Pmi
                 columns.Append(new Column() { Min = 1, Max = 1, Width = 6.86, CustomWidth = true });
                 columns.Append(new Column() { Min = 2, Max = 2, Width = 18, CustomWidth = true });
                 columns.Append(new Column() { Min = 3, Max = 3, Width = 7.57, CustomWidth = true });
-                columns.Append(new Column() { Min = 4, Max = 4, Width = 4.71, CustomWidth = true });
-                columns.Append(new Column() { Min = 5, Max = 5, Width = 5.86, CustomWidth = true });
-                columns.Append(new Column() { Min = 6, Max = 6, Width = 3.86, CustomWidth = true });
-                columns.Append(new Column() { Min = 7, Max = 7, Width = 7.71, CustomWidth = true });
-                columns.Append(new Column() { Min = 8, Max = 8, Width = 7.71, CustomWidth = true });
-                columns.Append(new Column() { Min = 9, Max = 9, Width = 5, CustomWidth = true });
-                columns.Append(new Column() { Min = 10, Max = 10, Width = 7.43, CustomWidth = true });
+                columns.Append(new Column() { Min = 4, Max = 4, Width = 7.57, CustomWidth = true });
+                columns.Append(new Column() { Min = 5, Max = 5, Width = 8.86, CustomWidth = true });
+                columns.Append(new Column() { Min = 6, Max = 6, Width = 7.57, CustomWidth = true });
+                columns.Append(new Column() { Min = 7, Max = 7, Width = 8.71, CustomWidth = true });
+                columns.Append(new Column() { Min = 8, Max = 8, Width = 9.71, CustomWidth = true });
+                columns.Append(new Column() { Min = 9, Max = 9, Width = 6.86, CustomWidth = true });
+                columns.Append(new Column() { Min = 10, Max = 10, Width = 8.43, CustomWidth = true });
                 columns.Append(new Column() { Min = 11, Max = 11, Width = 7.57, CustomWidth = true });
                 columns.Append(new Column() { Min = 12, Max = 12, Width = 9.14, CustomWidth = true });
                 columns.Append(new Column() { Min = 13, Max = 13, Width = 5.71, CustomWidth = true });
-                columns.Append(new Column() { Min = 14, Max = 14, Width = 4.43, CustomWidth = true });
-                columns.Append(new Column() { Min = 15, Max = 15, Width = 5.71, CustomWidth = true });
+                columns.Append(new Column() { Min = 14, Max = 14, Width = 6.43, CustomWidth = true });
+                columns.Append(new Column() { Min = 15, Max = 15, Width = 8.51, CustomWidth = true });
                 columns.Append(new Column() { Min = 16, Max = 16, Width = 8.43, CustomWidth = true });
                 columns.Append(new Column() { Min = 17, Max = 17, Width = 10.43, CustomWidth = true });
                 worksheetPart.Worksheet.InsertAt(columns, 0);
@@ -688,8 +750,8 @@ namespace Pmi
                 new CellData(){Column = "M", Row = 5, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.Position).Id, Data = "Зав. кафедрой ПМИ"},
                 new CellData(){Column = "M", Row = 6, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.ManagerInfo).Id, Data = "Зайдуллин С.С."},
                 new CellData(){Column = "O", Row = 7, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.ManagerInfoMeta).Id, Data = "подпись, ФИО"},
-                new CellData(){Column = "C", Row = 7, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.EmployeeInfo).Id, Data = $"{employee.Rank}, {employee.LastName} {employee.FirstName} {employee.Patronymic}, {employee.StudyRank}, {employee.Rate}, {employee.Staffing}, {employee.Title}"},
-                new CellData(){Column = "C", Row = 8, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.EmployeeInfoMeta).Id, Data = "должность, ФИО, ученая степень, ученое звание, доля ставки, штатность, звание"},
+                new CellData(){Column = "C", Row = 7, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.EmployeeInfo).Id, Data = $"{employee.Rank}, {employee.LastName} {employee.FirstName} {employee.Patronymic}, {employee.StudyRank}, {employee.Title}, {employee.Rate}, {employee.Staffing}"},
+                new CellData(){Column = "C", Row = 8, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.EmployeeInfoMeta).Id, Data = "должность, ФИО, ученая степень, ученое звание, доля ставки, штатность"},
                 new CellData(){Column = "C", Row = 9, StyleIndex = cellFormats.FirstOrDefault(c => c.CellFormatType == ExcelCellFormats.Year).Id, Data = "на  "+year+" учебный год"},
 
                 new CellData(){Column = "A", StyleIndex = ColumnName, Row = 11, Data = "Код ОП,\nиндекс дисциплины,\nнаименование дисциплины"},
